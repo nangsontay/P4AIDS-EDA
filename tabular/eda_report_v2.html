@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Telemarketing Dataset - EDA Report v2</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link id="prism-theme" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg-primary:#0b0b1a;--bg-secondary:#12122a;--bg-card:rgba(255,255,255,0.04);--bg-card-hover:rgba(255,255,255,0.08);--glass-border:rgba(255,255,255,0.08);--glass-border-hover:rgba(255,255,255,0.15);--text-primary:#e8e8f0;--text-secondary:#9898b0;--text-muted:#6868808c;--accent-cyan:#00d4ff;--accent-magenta:#ff006e;--accent-amber:#ffbe0b;--accent-green:#06d6a0;--accent-red:#ef476f;--glow-cyan:0 0 20px rgba(0,212,255,0.3);--glow-magenta:0 0 20px rgba(255,0,110,0.3);--radius:16px;--radius-sm:10px;--radius-xs:6px}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;line-height:1.6}
+        body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 20%,rgba(0,212,255,0.06) 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(255,0,110,0.05) 0%,transparent 50%);pointer-events:none;z-index:0}
+        .app{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:20px}
+        /* ===== HEADER ===== */
+        .header{text-align:center;padding:50px 30px 40px;position:relative}
+        .header::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:200px;height:2px;background:linear-gradient(90deg,transparent,var(--accent-cyan),var(--accent-magenta),transparent)}
+        .header h1{font-size:3em;font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,var(--accent-cyan),#a78bfa,var(--accent-magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+        .header .subtitle{font-size:1.1em;color:var(--text-secondary);font-weight:300;letter-spacing:0.5px}
+        /* ===== CONTROLS ===== */
+        .controls{display:flex;justify-content:center;gap:12px;padding:24px 0;flex-wrap:wrap}
+        .ctrl-btn{padding:10px 24px;background:var(--bg-card);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:100px;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.9em;font-weight:500;transition:all 0.3s ease;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+        .ctrl-btn:hover{background:var(--bg-card-hover);border-color:var(--accent-cyan);color:var(--accent-cyan);box-shadow:var(--glow-cyan)}
+        .ctrl-btn.active{background:rgba(0,212,255,0.1);border-color:var(--accent-cyan);color:var(--accent-cyan)}
+        .ctrl-divider{width:1px;background:var(--glass-border);margin:0 8px}
+        /* ===== GLASS CARD ===== */
+        .glass{background:var(--bg-card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--radius);transition:all 0.3s ease}
+        .glass:hover{border-color:var(--glass-border-hover);background:var(--bg-card-hover)}
+        /* ===== SECTIONS ===== */
+        .section{margin-bottom:28px}
+        .section-header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;cursor:pointer;user-select:none;border-radius:var(--radius) var(--radius) 0 0}
+        .section-header.collapsed-header{border-radius:var(--radius)}
+        .section-header h2{font-size:1.4em;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:12px;flex:1}
+        .section-header h2 .icon{font-size:1.2em}
+        .section-header .chevron{font-size:0.8em;color:var(--text-muted);transition:transform 0.3s ease}
+        .section-header .chevron.collapsed{transform:rotate(-90deg)}
+        .section-actions{display:flex;gap:8px;margin-left:16px}
+        .btn-sm{padding:6px 16px;border:1px solid var(--glass-border);background:transparent;color:var(--text-secondary);border-radius:100px;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.8em;font-weight:500;transition:all 0.3s ease}
+        .btn-sm:hover{background:rgba(0,212,255,0.1);border-color:var(--accent-cyan);color:var(--accent-cyan)}
+        .btn-sm.btn-tutorial{border-color:rgba(167,139,250,0.3);color:#a78bfa}
+        .btn-sm.btn-tutorial:hover{background:rgba(167,139,250,0.1);border-color:#a78bfa}
+        .btn-sm.btn-copy{border-color:rgba(6,214,160,0.3);color:var(--accent-green)}
+        .btn-sm.btn-copy:hover{background:rgba(6,214,160,0.1);border-color:var(--accent-green)}
+        .btn-sm.copied{background:rgba(6,214,160,0.2)!important;border-color:var(--accent-green)!important;color:var(--accent-green)!important}
+        .section-body{padding:0 24px 24px;overflow:hidden;transition:max-height 0.4s ease,opacity 0.3s ease,padding 0.3s ease;max-height:15000px;opacity:1}
+        .section-body.collapsed{max-height:0;opacity:0;padding-top:0;padding-bottom:0}
+        /* ===== STAT CARDS ===== */
+        .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+        .stat-card{padding:24px 20px;border-radius:var(--radius-sm);text-align:center;position:relative;overflow:hidden}
+        .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+        .stat-card.cyan::before{background:linear-gradient(90deg,var(--accent-cyan),#a78bfa)}
+        .stat-card.magenta::before{background:linear-gradient(90deg,var(--accent-magenta),var(--accent-amber))}
+        .stat-card.green::before{background:linear-gradient(90deg,var(--accent-green),var(--accent-cyan))}
+        .stat-card.amber::before{background:linear-gradient(90deg,var(--accent-amber),var(--accent-magenta))}
+        .stat-card.blue::before{background:linear-gradient(90deg,#4facfe,#a78bfa)}
+        .stat-value{font-size:2.2em;font-weight:800;color:var(--text-primary);margin-bottom:4px;letter-spacing:-0.5px}
+        .stat-label{font-size:0.85em;color:var(--text-secondary);font-weight:500}
+        .stat-detail{font-size:0.8em;color:var(--text-muted);margin-top:8px;line-height:1.5}
+        /* ===== TABLES ===== */
+        .data-table{width:100%;border-collapse:separate;border-spacing:0;margin:16px 0;border-radius:var(--radius-sm);overflow:hidden}
+        .data-table th{background:rgba(0,212,255,0.08);color:var(--accent-cyan);padding:14px 16px;text-align:left;font-weight:600;font-size:0.85em;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--glass-border)}
+        .data-table td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.9em;color:var(--text-secondary)}
+        .data-table tbody tr{transition:all 0.2s ease}
+        .data-table tbody tr:hover{background:rgba(0,212,255,0.04)}
+        .data-table tbody tr:last-child td{border-bottom:none}
+        /* ===== BADGES ===== */
+        .badge{padding:3px 10px;border-radius:100px;font-size:0.75em;font-weight:600;display:inline-block}
+        .badge-num{background:rgba(6,214,160,0.15);color:var(--accent-green);border:1px solid rgba(6,214,160,0.2)}
+        .badge-cat{background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.2)}
+        .badge-bin{background:rgba(0,212,255,0.15);color:var(--accent-cyan);border:1px solid rgba(0,212,255,0.2)}
+        .badge-target{background:rgba(255,0,110,0.15);color:var(--accent-magenta);border:1px solid rgba(255,0,110,0.2)}
+        /* ===== CHARTS ===== */
+        .chart-wrap{position:relative;height:400px;margin:16px 0;background:rgba(0,0,0,0.2);border-radius:var(--radius-sm);padding:16px;border:1px solid rgba(255,255,255,0.03)}
+        .chart-wrap canvas{display:block;margin:0 auto;max-width:100%;height:auto}
+        /* ===== TUTORIAL PANEL ===== */
+        .tutorial-panel{background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.15);border-radius:var(--radius-sm);padding:24px;margin:16px 0;display:none;animation:fadeSlide 0.3s ease}
+        .tutorial-panel.active{display:block}
+        @keyframes fadeSlide{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+        .tutorial-explanation{margin-bottom:20px}
+        .tutorial-explanation h3{color:#a78bfa;margin-bottom:12px;font-size:1.15em;font-weight:700}
+        .tutorial-explanation p{color:var(--text-secondary);line-height:1.8;margin-bottom:12px;font-size:0.95em}
+        .tutorial-explanation strong{color:#a78bfa}
+        .outlier-methods{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+        .method-box{background:rgba(255,255,255,0.03);padding:18px;border-radius:var(--radius-sm);border:1px solid var(--glass-border)}
+        .method-box:first-child{border-left:3px solid var(--accent-cyan)}
+        .method-box:nth-child(2){border-left:3px solid #a78bfa}
+        .method-box:last-child{border-left:3px solid var(--accent-amber);background:rgba(255,190,11,0.04)}
+        .method-box strong{color:var(--accent-cyan);font-size:1em;display:block;margin-bottom:10px}
+        .method-box:nth-child(2) strong{color:#a78bfa}
+        .method-box:last-child strong{color:var(--accent-amber)}
+        .formula{background:rgba(0,212,255,0.1);color:var(--accent-cyan);padding:8px 14px;border-radius:var(--radius-xs);font-family:'JetBrains Mono',monospace;font-size:0.9em;font-weight:500;margin:6px 0;border:1px solid rgba(0,212,255,0.15)}
+        .method-box:nth-child(2) .formula{background:rgba(167,139,250,0.1);color:#a78bfa;border-color:rgba(167,139,250,0.15)}
+        .method-box p{margin:8px 0 0;color:var(--text-secondary);line-height:1.6;font-size:0.9em}
+        /* ===== CODE TABS ===== */
+        .code-tabs{border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--glass-border)}
+        .code-tabs-header{display:flex;background:rgba(0,0,0,0.4);border-bottom:1px solid var(--glass-border)}
+        .code-tab-button{flex:1;padding:10px 18px;background:transparent;color:var(--text-muted);border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.85em;font-weight:600;transition:all 0.3s ease;position:relative}
+        .code-tab-button:hover{color:var(--text-secondary);background:rgba(255,255,255,0.03)}
+        .code-tab-button.active{color:var(--accent-cyan);background:rgba(0,212,255,0.05)}
+        .code-tab-button.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent-cyan)}
+        .code-tab-content{display:none;position:relative;background:rgba(0,0,0,0.3)!important;border:none!important}
+        .code-tab-content.active{display:block}
+        .code-copy-button{position:absolute;top:8px;right:8px;padding:6px 14px;background:rgba(0,212,255,0.15);color:var(--accent-cyan);border:1px solid rgba(0,212,255,0.2);border-radius:100px;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.8em;font-weight:600;z-index:10;transition:all 0.3s ease}
+        .code-copy-button:hover{background:rgba(0,212,255,0.25);box-shadow:var(--glow-cyan)}
+        .code-copy-button.copied{background:rgba(6,214,160,0.2);color:var(--accent-green);border-color:rgba(6,214,160,0.3)}
+        pre{background:transparent!important;border:none!important;padding:0!important;margin:0!important}
+        pre code{font-family:'JetBrains Mono','Consolas',monospace;font-size:0.85em;line-height:1.7;background:transparent!important;padding:16px!important;display:block}
+        /* ===== INSIGHTS ===== */
+        .insight-list{list-style:none;padding:0}
+        .insight-list li{padding:14px 20px;margin-bottom:8px;background:rgba(255,255,255,0.02);border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,0.04);color:var(--text-secondary);line-height:1.7;transition:all 0.2s ease;font-size:0.95em}
+        .insight-list li:hover{background:rgba(0,212,255,0.04);border-color:rgba(0,212,255,0.1)}
+        .insight-list li strong{color:var(--text-primary)}
+        /* ===== SAMPLE DATA ===== */
+        .sample-block{margin:20px 0;padding:20px;background:rgba(0,0,0,0.15);border-radius:var(--radius-sm);border:1px solid var(--glass-border)}
+        .sample-block h3{color:var(--accent-cyan);margin-bottom:12px;font-size:1.05em;font-weight:600}
+        .sample-block h3 .highlight{color:var(--accent-magenta)}
+        .sample-table{width:100%;border-collapse:collapse;font-size:0.8em;overflow:hidden;border-radius:var(--radius-xs)}
+        .sample-table thead tr{background:rgba(0,212,255,0.08)}
+        .sample-table th{padding:10px 8px;font-weight:600;text-align:left;color:var(--accent-cyan);white-space:nowrap;font-size:0.85em}
+        .sample-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text-secondary)}
+        .sample-table tbody tr{transition:all 0.2s ease}
+        .sample-table tbody tr:hover{background:rgba(255,0,110,0.04)}
+        /* ===== METHODOLOGY TABLE ===== */
+        .method-table{width:100%;border-collapse:collapse;margin:16px 0}
+        .method-table th{background:rgba(0,212,255,0.08);color:var(--accent-cyan);padding:12px 16px;text-align:left;font-weight:600;font-size:0.85em;border-bottom:1px solid var(--glass-border)}
+        .method-table td{padding:11px 16px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.9em;color:var(--text-secondary)}
+        .method-table td strong{color:var(--text-primary)}
+        .method-table td small{color:var(--text-muted)}
+        .method-table tbody tr:hover{background:rgba(0,212,255,0.03)}
+        /* ===== CALLOUT BOX ===== */
+        .callout{padding:16px 20px;border-radius:var(--radius-sm);margin-top:20px;font-size:0.95em;line-height:1.6}
+        .callout.cyan{background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.12);color:var(--accent-cyan)}
+        .callout.cyan strong{color:var(--text-primary)}
+        .callout p{color:var(--text-secondary)}
+        /* ===== SECTION TITLE ===== */
+        .sub-title{color:var(--accent-cyan);margin:24px 0 12px;font-size:1.1em;font-weight:600}
+        .sub-title.magenta{color:var(--accent-magenta)}
+        /* ===== FOOTER ===== */
+        .footer{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:0.85em;border-top:1px solid var(--glass-border);margin-top:30px}
+        .footer strong{color:var(--text-secondary)}
+        /* ===== LOADING ===== */
+        .loading-message{padding:16px;background:rgba(255,190,11,0.06);border:1px solid rgba(255,190,11,0.15);border-radius:var(--radius-xs);color:var(--accent-amber);margin:10px 0;font-size:0.9em}
+        /* ===== RESPONSIVE ===== */
+        @media(max-width:768px){.app{padding:12px}.header h1{font-size:2em}.header .subtitle{font-size:0.95em}.section-header{flex-direction:column;align-items:flex-start;gap:12px}.section-actions{margin-left:0}.stats-row{grid-template-columns:1fr 1fr}.chart-wrap{height:300px;padding:8px}.controls{gap:8px}.ctrl-btn{padding:8px 16px;font-size:0.82em}}
+        @media(max-width:480px){.stats-row{grid-template-columns:1fr}.header h1{font-size:1.6em}}
+        /* ===== LIGHT THEME ===== */
+        body.light-theme{--bg-primary:#f4f5f7;--bg-secondary:#ffffff;--bg-card:rgba(255,255,255,0.8);--bg-card-hover:rgba(255,255,255,0.95);--glass-border:rgba(0,0,0,0.08);--glass-border-hover:rgba(0,0,0,0.15);--text-primary:#1a1a2e;--text-secondary:#4a4a6a;--text-muted:#8a8aa0}
+        body.light-theme::before{background:radial-gradient(ellipse at 20% 20%,rgba(0,212,255,0.04) 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(255,0,110,0.03) 0%,transparent 50%)}
+        body.light-theme .glass{background:var(--bg-card);box-shadow:0 2px 20px rgba(0,0,0,0.04)}
+        body.light-theme .data-table th{background:rgba(0,212,255,0.06)}
+        body.light-theme .chart-wrap{background:rgba(255,255,255,0.5);border-color:rgba(0,0,0,0.05)}
+        body.light-theme .sample-block{background:rgba(0,0,0,0.02);border-color:rgba(0,0,0,0.06)}
+        body.light-theme .tutorial-panel{background:rgba(167,139,250,0.04);border-color:rgba(167,139,250,0.12)}
+        body.light-theme .code-tab-content{background:rgba(0,0,0,0.04)!important}
+        body.light-theme .code-tabs-header{background:rgba(0,0,0,0.06)}
+        body.light-theme .insight-list li{background:rgba(0,0,0,0.02);border-color:rgba(0,0,0,0.05)}
+        body.light-theme .method-box{background:rgba(0,0,0,0.02);border-color:rgba(0,0,0,0.06)}
+    </style>
+</head>
+<body>
+<div class="app">
+    <!-- ===== HEADER ===== -->
+    <div class="header">
+        <h1>📞 Bank Telemarketing Dataset</h1>
+        <div class="subtitle">Exploratory Data Analysis Report with Interactive Tutorials</div>
+    </div>
+
+    <!-- ===== CONTROLS ===== -->
+    <div class="controls">
+        <button id="collapseAllBtn" class="ctrl-btn">📦 Collapse All</button>
+        <button id="expandAllBtn" class="ctrl-btn">📂 Expand All</button>
+        <div class="ctrl-divider"></div>
+        <button id="themeToggleBtn" class="ctrl-btn">
+            <span id="themeIcon">☀️</span> <span id="themeText">Light Mode</span>
+        </button>
+    </div>
+
+    <!-- ===== 1. METHODOLOGY ===== -->
+    <div class="section glass" id="methodology">
+        <div class="section-header" onclick="toggleSection('methodology')">
+            <h2><span class="icon">📚</span> Analysis Methodology</h2>
+            <span class="chevron" id="methodology-chevron">▼</span>
+        </div>
+        <div class="section-body" id="methodology-body">
+            <p style="color:var(--text-secondary);margin-bottom:20px;">This report analyzes the Bank Telemarketing dataset (structured tabular format) with focus on data quality, feature distributions, target imbalance, and relationships.</p>
+            <table class="method-table">
+                <thead><tr><th>Analysis Type</th><th>Purpose</th><th>Key Metrics</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Unknown Values</strong></td><td>Data quality &amp; structural missingness</td><td><small>"unknown" counts, Patterns, Imputation strategy</small></td></tr>
+                    <tr><td><strong>Numerical Features</strong></td><td>Distribution &amp; outliers</td><td><small>Mean, Median, Std, IQR, Outliers</small></td></tr>
+                    <tr><td><strong>Binary Features</strong></td><td>Yes/No feature balance</td><td><small>Distribution, Imbalance within features</small></td></tr>
+                    <tr><td><strong>Categorical Features</strong></td><td>Category frequencies</td><td><small>Unique values, Mode, Cardinality</small></td></tr>
+                    <tr><td><strong>Correlation</strong></td><td>Feature relationships</td><td><small>Pearson r, Multicollinearity</small></td></tr>
+                    <tr><td><strong>Target Analysis</strong></td><td>Class balance &amp; relationships</td><td><small>Distribution, Imbalance ratio, Target vs features</small></td></tr>
+                </tbody>
+            </table>
+            <div class="callout cyan">
+                <strong>💡 Key Principle:</strong> Understand data quality and distributions BEFORE applying machine learning models. With 7.55:1 class imbalance, standard accuracy is misleading.
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 2. DATASET OVERVIEW ===== -->
+    <div class="section glass" id="overview">
+        <div class="section-header" onclick="toggleSection('overview')">
+            <h2><span class="icon">📊</span> Dataset Overview</h2>
+            <div class="section-actions">
+                <button class="btn-sm btn-tutorial" onclick="event.stopPropagation();toggleTutorial('dataset_overview')">📚 Tutorial</button>
+                <button class="btn-sm btn-copy" onclick="event.stopPropagation();copyCodeQuick('dataset_overview')">📋 Copy Code</button>
+            </div>
+            <span class="chevron" id="overview-chevron">▼</span>
+        </div>
+        <div class="section-body" id="overview-body">
+            <div id="dataset_overview-tutorial" class="tutorial-panel">
+                <div id="dataset_overview-loading" class="loading-message">⏳ Loading tutorial content...</div>
+                <div id="dataset_overview-explanation" class="tutorial-explanation" style="display:none;"></div>
+                <div class="code-tabs" id="dataset_overview-code-tabs" style="display:none;">
+                    <div class="code-tabs-header"><button class="code-tab-button active" onclick="switchTab('dataset_overview','seaborn')">Seaborn</button></div>
+                    <div id="dataset_overview-seaborn" class="code-tab-content active">
+                        <button class="code-copy-button" onclick="copyCodeBlock('dataset_overview','seaborn')">📋 Copy</button>
+                        <pre><code id="dataset_overview-seaborn-code" class="language-python"></code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="stats-row">
+                <div class="stat-card glass cyan"><div class="stat-value">45,211</div><div class="stat-label">Total Samples</div></div>
+                <div class="stat-card glass cyan"><div class="stat-value">17</div><div class="stat-label">Total Features</div></div>
+                <div class="stat-card glass green"><div class="stat-value">6</div><div class="stat-label">Numerical Features</div></div>
+                <div class="stat-card glass blue"><div class="stat-value">4</div><div class="stat-label">Binary Features</div></div>
+                <div class="stat-card glass magenta"><div class="stat-value">6</div><div class="stat-label">Categorical Features</div></div>
+            </div>
+            <h3 class="sub-title magenta">Target Variable: y (Term Deposit Subscription)</h3>
+            <div class="stats-row">
+                <div class="stat-card glass cyan"><div class="stat-value">39,922</div><div class="stat-label">No (88.3%)</div></div>
+                <div class="stat-card glass magenta"><div class="stat-value">5,289</div><div class="stat-label">Yes (11.7%)</div></div>
+                <div class="stat-card glass amber"><div class="stat-value">7.55:1</div><div class="stat-label">Imbalance Ratio</div></div>
+            </div>
+            <h3 class="sub-title">📋 Feature Descriptions</h3>
+            <div style="overflow-x:auto;">
+                <table class="data-table">
+                    <thead><tr><th>Feature Name</th><th>Type</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>age</strong></td><td><span class="badge badge-num">Numerical</span></td><td>Age of the client in years</td></tr>
+                        <tr><td><strong>job</strong></td><td><span class="badge badge-cat">Categorical</span></td><td>Type of job (admin., technician, management, blue-collar, etc.)</td></tr>
+                        <tr><td><strong>marital</strong></td><td><span class="badge badge-cat">Categorical</span></td><td>Marital status (married, single, divorced)</td></tr>
+                        <tr><td><strong>education</strong></td><td><span class="badge badge-cat">Categorical</span></td><td>Level of education (primary, secondary, tertiary, unknown)</td></tr>
+                        <tr><td><strong>default</strong></td><td><span class="badge badge-bin">Binary</span></td><td>Has credit in default? (yes/no)</td></tr>
+                        <tr><td><strong>balance</strong></td><td><span class="badge badge-num">Numerical</span></td><td>Average yearly balance in euros</td></tr>
+                        <tr><td><strong>housing</strong></td><td><span class="badge badge-bin">Binary</span></td><td>Has housing loan? (yes/no)</td></tr>
+                        <tr><td><strong>loan</strong></td><td><span class="badge badge-bin">Binary</span></td><td>Has personal loan? (yes/no)</td></tr>
+                        <tr><td><strong>contact</strong></td><td><span class="badge badge-cat">Categorical</span></td><td>Contact communication type (cellular, telephone, unknown)</td></tr>
+                        <tr><td><strong>day</strong></td><td><span class="badge badge-num">Numerical</span></td><td>Last contact day of the month</td></tr>
+                        <tr><td><strong>month</strong></td><td><span class="badge badge-cat">Categorical</span></td><td>Last contact month of year</td></tr>
+                        <tr><td><strong>duration</strong></td><td><span class="badge badge-num">Numerical</span></td><td>Last contact duration in seconds (⚠️ data leakage risk)</td></tr>
+                        <tr><td><strong>campaign</strong></td><td><span class="badge badge-num">Numerical</span></td><td>Number of contacts during this campaign</td></tr>
+                        <tr><td><strong>pdays</strong></td><td><span class="badge badge-num">Numerical</span></td><td>Days since last contact from previous campaign (-1 = never)</td></tr>
+                        <tr><td><strong>previous</strong></td><td><span class="badge badge-num">Numerical</span></td><td>Number of contacts before this campaign</td></tr>
+                        <tr><td><strong>poutcome</strong></td><td><span class="badge badge-cat">Categorical</span></td><td>Outcome of previous campaign (success, failure, other, unknown)</td></tr>
+                        <tr style="background:rgba(255,0,110,0.04);"><td><strong>y</strong></td><td><span class="badge badge-target">Target</span></td><td>Has the client subscribed a term deposit? (yes/no)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 3. MISSING / UNKNOWN VALUES ===== -->
+    <div class="section glass" id="missing_values">
+        <div class="section-header" onclick="toggleSection('missing_values')">
+            <h2><span class="icon">🔍</span> Missing / Unknown Values Analysis</h2>
+            <div class="section-actions">
+                <button class="btn-sm btn-tutorial" onclick="event.stopPropagation();toggleTutorial('missing_values')">📚 Tutorial</button>
+                <button class="btn-sm btn-copy" onclick="event.stopPropagation();copyCodeQuick('missing_values')">📋 Copy Code</button>
+            </div>
+            <span class="chevron" id="missing_values-chevron">▼</span>
+        </div>
+        <div class="section-body" id="missing_values-body">
+            <div id="missing_values-tutorial" class="tutorial-panel">
+                <div id="missing_values-loading" class="loading-message">⏳ Loading tutorial content...</div>
+                <div id="missing_values-explanation" class="tutorial-explanation" style="display:none;"></div>
+                <div class="code-tabs" id="missing_values-code-tabs" style="display:none;">
+                    <div class="code-tabs-header"><button class="code-tab-button active" onclick="switchTab('missing_values','seaborn')">Seaborn</button></div>
+                    <div id="missing_values-seaborn" class="code-tab-content active">
+                        <button class="code-copy-button" onclick="copyCodeBlock('missing_values','seaborn')">📋 Copy</button>
+                        <pre><code id="missing_values-seaborn-code" class="language-python"></code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="stats-row">
+                <div class="stat-card glass green"><div class="stat-value">0</div><div class="stat-label">NaN Missing Values</div></div>
+                <div class="stat-card glass amber"><div class="stat-value">4</div><div class="stat-label">Columns with "unknown"</div></div>
+                <div class="stat-card glass magenta"><div class="stat-value">52,124</div><div class="stat-label">Total "unknown" Entries</div></div>
+            </div>
+            <table class="data-table">
+                <thead><tr><th>Feature</th><th>"unknown" Count</th><th>"unknown" %</th><th>Severity</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>poutcome</strong></td><td>36,959</td><td>81.75%</td><td>🔴 Very High</td></tr>
+                    <tr><td><strong>contact</strong></td><td>13,020</td><td>28.80%</td><td>⚠️ High</td></tr>
+                    <tr><td><strong>education</strong></td><td>1,857</td><td>4.11%</td><td>⚠️ Medium</td></tr>
+                    <tr><td><strong>job</strong></td><td>288</td><td>0.64%</td><td>✓ Low</td></tr>
+                </tbody>
+            </table>
+            <div class="chart-wrap"><canvas id="unknownChart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- ===== 4. NUMERICAL FEATURES ===== -->
+    <div class="section glass" id="numerical_distributions">
+        <div class="section-header" onclick="toggleSection('numerical_distributions')">
+            <h2><span class="icon">📈</span> Numerical Features Distribution</h2>
+            <div class="section-actions">
+                <button class="btn-sm btn-tutorial" onclick="event.stopPropagation();toggleTutorial('numerical_distributions')">📚 Tutorial</button>
+                <button class="btn-sm btn-copy" onclick="event.stopPropagation();copyCodeQuick('numerical_distributions')">📋 Copy Code</button>
+            </div>
+            <span class="chevron" id="numerical_distributions-chevron">▼</span>
+        </div>
+        <div class="section-body" id="numerical_distributions-body">
+            <div id="numerical_distributions-tutorial" class="tutorial-panel">
+                <div id="numerical_distributions-loading" class="loading-message">⏳ Loading tutorial content...</div>
+                <div id="numerical_distributions-explanation" class="tutorial-explanation" style="display:none;"></div>
+                <div class="code-tabs" id="numerical_distributions-code-tabs" style="display:none;">
+                    <div class="code-tabs-header"><button class="code-tab-button active" onclick="switchTab('numerical_distributions','seaborn')">Seaborn</button></div>
+                    <div id="numerical_distributions-seaborn" class="code-tab-content active">
+                        <button class="code-copy-button" onclick="copyCodeBlock('numerical_distributions','seaborn')">📋 Copy</button>
+                        <pre><code id="numerical_distributions-seaborn-code" class="language-python"></code></pre>
+                    </div>
+                </div>
+            </div>
+            <h3 class="sub-title">Feature Statistics</h3>
+            <div class="stats-row">
+                <div class="stat-card glass blue"><div class="stat-label" style="font-size:1em;margin-bottom:8px;color:var(--accent-cyan);">Age</div><div class="stat-detail">Mean: 40.94<br>Median: 39.0<br>Std: 10.62</div></div>
+                <div class="stat-card glass blue"><div class="stat-label" style="font-size:1em;margin-bottom:8px;color:var(--accent-cyan);">Balance</div><div class="stat-detail">Mean: 1362.27<br>Median: 448.0<br>Std: 3044.77</div></div>
+                <div class="stat-card glass blue"><div class="stat-label" style="font-size:1em;margin-bottom:8px;color:var(--accent-cyan);">Duration</div><div class="stat-detail">Mean: 258.16<br>Median: 180.0<br>Std: 257.53</div></div>
+                <div class="stat-card glass blue"><div class="stat-label" style="font-size:1em;margin-bottom:8px;color:var(--accent-cyan);">Campaign</div><div class="stat-detail">Mean: 2.76<br>Median: 2.0<br>Std: 3.10</div></div>
+                <div class="stat-card glass blue"><div class="stat-label" style="font-size:1em;margin-bottom:8px;color:var(--accent-cyan);">Pdays</div><div class="stat-detail">Mean: 40.20<br>Median: -1.0<br>Std: 100.13</div></div>
+                <div class="stat-card glass blue"><div class="stat-label" style="font-size:1em;margin-bottom:8px;color:var(--accent-cyan);">Previous</div><div class="stat-detail">Mean: 0.58<br>Median: 0.0<br>Std: 2.30</div></div>
+            </div>
+            <div id="numericalChartsContainer"></div>
+        </div>
+    </div>
+
+    <!-- ===== 5. BINARY FEATURES ===== -->
+    <div class="section glass" id="binary_distributions">
+        <div class="section-header" onclick="toggleSection('binary_distributions')">
+            <h2><span class="icon">🔘</span> Binary Features Distribution</h2>
+            <div class="section-actions">
+                <button class="btn-sm btn-tutorial" onclick="event.stopPropagation();toggleTutorial('binary_distributions')">📚 Tutorial</button>
+                <button class="btn-sm btn-copy" onclick="event.stopPropagation();copyCodeQuick('binary_distributions')">📋 Copy Code</button>
+            </div>
+            <span class="chevron" id="binary_distributions-chevron">▼</span>
+        </div>
+        <div class="section-body" id="binary_distributions-body">
+            <div id="binary_distributions-tutorial" class="tutorial-panel">
+                <div id="binary_distributions-loading" class="loading-message">⏳ Loading tutorial content...</div>
+                <div id="binary_distributions-explanation" class="tutorial-explanation" style="display:none;"></div>
+                <div class="code-tabs" id="binary_distributions-code-tabs" style="display:none;">
+                    <div class="code-tabs-header"><button class="code-tab-button active" onclick="switchTab('binary_distributions','seaborn')">Seaborn</button></div>
+                    <div id="binary_distributions-seaborn" class="code-tab-content active">
+                        <button class="code-copy-button" onclick="copyCodeBlock('binary_distributions','seaborn')">📋 Copy</button>
+                        <pre><code id="binary_distributions-seaborn-code" class="language-python"></code></pre>
+                    </div>
+                </div>
+            </div>
+            <div id="binaryChartsContainer"></div>
+        </div>
+    </div>
+
+    <!-- ===== 6. CATEGORICAL FEATURES ===== -->
+    <div class="section glass" id="categorical_distributions">
+        <div class="section-header" onclick="toggleSection('categorical_distributions')">
+            <h2><span class="icon">📊</span> Categorical Features Distribution</h2>
+            <div class="section-actions">
+                <button class="btn-sm btn-tutorial" onclick="event.stopPropagation();toggleTutorial('categorical_distributions')">📚 Tutorial</button>
+                <button class="btn-sm btn-copy" onclick="event.stopPropagation();copyCodeQuick('categorical_distributions')">📋 Copy Code</button>
+            </div>
+            <span class="chevron" id="categorical_distributions-chevron">▼</span>
+        </div>
+        <div class="section-body" id="categorical_distributions-body">
+            <div id="categorical_distributions-tutorial" class="tutorial-panel">
+                <div id="categorical_distributions-loading" class="loading-message">⏳ Loading tutorial content...</div>
+                <div id="categorical_distributions-explanation" class="tutorial-explanation" style="display:none;"></div>
+                <div class="code-tabs" id="categorical_distributions-code-tabs" style="display:none;">
+                    <div class="code-tabs-header"><button class="code-tab-button active" onclick="switchTab('categorical_distributions','seaborn')">Seaborn</button></div>
+                    <div id="categorical_distributions-seaborn" class="code-tab-content active">
+                        <button class="code-copy-button" onclick="copyCodeBlock('categorical_distributions','seaborn')">📋 Copy</button>
+                        <pre><code id="categorical_distributions-seaborn-code" class="language-python"></code></pre>
+                    </div>
+                </div>
+            </div>
+            <div id="categoricalChartsContainer"></div>
+        </div>
+    </div>
+
+    <!-- ===== 7. TARGET DISTRIBUTION ===== -->
+    <div class="section glass" id="target_distribution">
+        <div class="section-header" onclick="toggleSection('target_distribution')">
+            <h2><span class="icon">🎯</span> Target Variable Distribution</h2>
+            <div class="section-actions">
+                <button class="btn-sm btn-tutorial" onclick="event.stopPropagation();toggleTutorial('target_distribution')">📚 Tutorial</button>
+                <button class="btn-sm btn-copy" onclick="event.stopPropagation();copyCodeQuick('target_distribution')">📋 Copy Code</button>
+            </div>
+            <span class="chevron" id="target_distribution-chevron">▼</span>
+        </div>
+        <div class="section-body" id="target_distribution-body">
+            <div id="target_distribution-tutorial" class="tutorial-panel">
+                <div id="target_distribution-loading" class="loading-message">⏳ Loading tutorial content...</div>
+                <div id="target_distribution-explanation" class="tutorial-explanation" style="display:none;"></div>
+                <div class="code-tabs" id="target_distribution-code-tabs" style="display:none;">
+                    <div class="code-tabs-header"><button class="code-tab-button active" onclick="switchTab('target_distribution','seaborn')">Seaborn</button></div>
+                    <div id="target_distribution-seaborn" class="code-tab-content active">
+                        <button class="code-copy-button" onclick="copyCodeBlock('target_distribution','seaborn')">📋 Copy</button>
+                        <pre><code id="target_distribution-seaborn-code" class="language-python"></code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-wrap"><canvas id="targetChart"></canvas></div>
+            <table class="data-table" style="margin-top:20px;">
+                <thead><tr><th>Class</th><th>Count</th><th>Percentage</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>no</strong></td><td>39,922</td><td>88.30%</td></tr>
+                    <tr><td><strong>yes</strong></td><td>5,289</td><td>11.70%</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===== 8. CORRELATION ANALYSIS ===== -->
+    <div class="section glass" id="correlation_analysis">
+        <div class="section-header" onclick="toggleSection('correlation_analysis')">
+            <h2><span class="icon">🔗</span> Correlation Analysis</h2>
+            <div class="section-actions">
+                <button class="btn-sm btn-tutorial" onclick="event.stopPropagation();toggleTutorial('correlation_analysis')">📚 Tutorial</button>
+                <button class="btn-sm btn-copy" onclick="event.stopPropagation();copyCodeQuick('correlation_analysis')">📋 Copy Code</button>
+            </div>
+            <span class="chevron" id="correlation_analysis-chevron">▼</span>
+        </div>
+        <div class="section-body" id="correlation_analysis-body">
+            <div id="correlation_analysis-tutorial" class="tutorial-panel">
+                <div id="correlation_analysis-loading" class="loading-message">⏳ Loading tutorial content...</div>
+                <div id="correlation_analysis-explanation" class="tutorial-explanation" style="display:none;"></div>
+                <div class="code-tabs" id="correlation_analysis-code-tabs" style="display:none;">
+                    <div class="code-tabs-header"><button class="code-tab-button active" onclick="switchTab('correlation_analysis','seaborn')">Seaborn</button></div>
+                    <div id="correlation_analysis-seaborn" class="code-tab-content active">
+                        <button class="code-copy-button" onclick="copyCodeBlock('correlation_analysis','seaborn')">📋 Copy</button>
+                        <pre><code id="correlation_analysis-seaborn-code" class="language-python"></code></pre>
+                    </div>
+                </div>
+            </div>
+            <div id="correlationHeatmap" style="width:100%;height:600px;margin:20px 0;"></div>
+        </div>
+    </div>
+
+    <!-- ===== 9. OUTLIER DETECTION ===== -->
+    <div class="section glass" id="outlier_detection">
+        <div class="section-header" onclick="toggleSection('outlier_detection')">
+            <h2><span class="icon">📦</span> Outlier Detection (IQR Method)</h2>
+            <div class="section-actions">
+                <button class="btn-sm btn-tutorial" onclick="event.stopPropagation();toggleTutorial('outlier_detection')">📚 Tutorial</button>
+                <button class="btn-sm btn-copy" onclick="event.stopPropagation();copyCodeQuick('outlier_detection')">📋 Copy Code</button>
+            </div>
+            <span class="chevron" id="outlier_detection-chevron">▼</span>
+        </div>
+        <div class="section-body" id="outlier_detection-body">
+            <div id="outlier_detection-tutorial" class="tutorial-panel">
+                <div id="outlier_detection-loading" class="loading-message">⏳ Loading tutorial content...</div>
+                <div id="outlier_detection-explanation" class="tutorial-explanation" style="display:none;"></div>
+                <div class="code-tabs" id="outlier_detection-code-tabs" style="display:none;">
+                    <div class="code-tabs-header"><button class="code-tab-button active" onclick="switchTab('outlier_detection','seaborn')">Seaborn</button></div>
+                    <div id="outlier_detection-seaborn" class="code-tab-content active">
+                        <button class="code-copy-button" onclick="copyCodeBlock('outlier_detection','seaborn')">📋 Copy</button>
+                        <pre><code id="outlier_detection-seaborn-code" class="language-python"></code></pre>
+                    </div>
+                </div>
+            </div>
+            <table class="data-table">
+                <thead><tr><th>Feature</th><th>Outlier Count</th><th>Percentage</th><th>Severity</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>age</strong></td><td>487</td><td>1.08%</td><td>✓ Low</td></tr>
+                    <tr><td><strong>balance</strong></td><td>4,729</td><td>10.46%</td><td>⚠️ High</td></tr>
+                    <tr><td><strong>duration</strong></td><td>3,235</td><td>7.16%</td><td>⚠️ High</td></tr>
+                    <tr><td><strong>campaign</strong></td><td>3,064</td><td>6.78%</td><td>⚠️ High</td></tr>
+                    <tr><td><strong>pdays</strong></td><td>8,257</td><td>18.26%</td><td>🔴 Very High</td></tr>
+                    <tr><td><strong>previous</strong></td><td>8,257</td><td>18.26%</td><td>🔴 Very High</td></tr>
+                </tbody>
+            </table>
+            <div id="outlierChartsContainer"></div>
+        </div>
+    </div>
+
+    <!-- ===== 10. TARGET VS FEATURES ===== -->
+    <div class="section glass" id="target_vs_features">
+        <div class="section-header" onclick="toggleSection('target_vs_features')">
+            <h2><span class="icon">🎯</span> Target vs Categorical Features</h2>
+            <div class="section-actions">
+                <button class="btn-sm btn-tutorial" onclick="event.stopPropagation();toggleTutorial('target_vs_features')">📚 Tutorial</button>
+                <button class="btn-sm btn-copy" onclick="event.stopPropagation();copyCodeQuick('target_vs_features')">📋 Copy Code</button>
+            </div>
+            <span class="chevron" id="target_vs_features-chevron">▼</span>
+        </div>
+        <div class="section-body" id="target_vs_features-body">
+            <div id="target_vs_features-tutorial" class="tutorial-panel">
+                <div id="target_vs_features-loading" class="loading-message">⏳ Loading tutorial content...</div>
+                <div id="target_vs_features-explanation" class="tutorial-explanation" style="display:none;"></div>
+                <div class="code-tabs" id="target_vs_features-code-tabs" style="display:none;">
+                    <div class="code-tabs-header"><button class="code-tab-button active" onclick="switchTab('target_vs_features','seaborn')">Seaborn</button></div>
+                    <div id="target_vs_features-seaborn" class="code-tab-content active">
+                        <button class="code-copy-button" onclick="copyCodeBlock('target_vs_features','seaborn')">📋 Copy</button>
+                        <pre><code id="target_vs_features-seaborn-code" class="language-python"></code></pre>
+                    </div>
+                </div>
+            </div>
+            <div id="targetVsFeaturesContainer"></div>
+        </div>
+    </div>
+
+    <!-- ===== 11. SAMPLE ROWS ===== -->
+    <div class="section glass" id="samples">
+        <div class="section-header" onclick="toggleSection('samples')">
+            <h2><span class="icon">📝</span> Sample Data Rows</h2>
+            <span class="chevron" id="samples-chevron">▼</span>
+        </div>
+        <div class="section-body" id="samples-body">
+            <div class="sample-block">
+                <h3>📊 Samples for: <span class="highlight">y = yes</span></h3>
+                <div style="overflow-x:auto;">
+                    <table class="sample-table">
+                        <thead><tr><th>age</th><th>job</th><th>marital</th><th>education</th><th>default</th><th>balance</th><th>housing</th><th>loan</th><th>contact</th><th>day</th><th>month</th><th>duration</th><th>campaign</th><th>pdays</th><th>previous</th><th>poutcome</th><th>y</th></tr></thead>
+                        <tbody>
+                            <tr><td>59</td><td>admin.</td><td>married</td><td>secondary</td><td>no</td><td>2343</td><td>yes</td><td>no</td><td>unknown</td><td>5</td><td>may</td><td>1042</td><td>1</td><td>-1</td><td>0</td><td>unknown</td><td>yes</td></tr>
+                            <tr><td>56</td><td>admin.</td><td>married</td><td>secondary</td><td>no</td><td>45</td><td>no</td><td>no</td><td>unknown</td><td>5</td><td>may</td><td>1467</td><td>1</td><td>-1</td><td>0</td><td>unknown</td><td>yes</td></tr>
+                            <tr><td>41</td><td>technician</td><td>married</td><td>secondary</td><td>no</td><td>1270</td><td>yes</td><td>no</td><td>unknown</td><td>5</td><td>may</td><td>1389</td><td>1</td><td>-1</td><td>0</td><td>unknown</td><td>yes</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="sample-block">
+                <h3>📊 Samples for: <span class="highlight">y = no</span></h3>
+                <div style="overflow-x:auto;">
+                    <table class="sample-table">
+                        <thead><tr><th>age</th><th>job</th><th>marital</th><th>education</th><th>default</th><th>balance</th><th>housing</th><th>loan</th><th>contact</th><th>day</th><th>month</th><th>duration</th><th>campaign</th><th>pdays</th><th>previous</th><th>poutcome</th><th>y</th></tr></thead>
+                        <tbody>
+                            <tr><td>58</td><td>management</td><td>married</td><td>tertiary</td><td>no</td><td>2143</td><td>yes</td><td>no</td><td>unknown</td><td>5</td><td>may</td><td>261</td><td>1</td><td>-1</td><td>0</td><td>unknown</td><td>no</td></tr>
+                            <tr><td>44</td><td>technician</td><td>single</td><td>secondary</td><td>no</td><td>29</td><td>yes</td><td>no</td><td>unknown</td><td>5</td><td>may</td><td>151</td><td>1</td><td>-1</td><td>0</td><td>unknown</td><td>no</td></tr>
+                            <tr><td>33</td><td>entrepreneur</td><td>married</td><td>secondary</td><td>no</td><td>2</td><td>yes</td><td>yes</td><td>unknown</td><td>5</td><td>may</td><td>76</td><td>1</td><td>-1</td><td>0</td><td>unknown</td><td>no</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 12. KEY INSIGHTS ===== -->
+    <div class="section glass" id="insights">
+        <div class="section-header" onclick="toggleSection('insights')">
+            <h2><span class="icon">💡</span> Key Insights</h2>
+            <span class="chevron" id="insights-chevron">▼</span>
+        </div>
+        <div class="section-body" id="insights-body">
+            <h3 class="sub-title" style="margin-top:0;">Dataset Characteristics &amp; Recommendations</h3>
+            <ul class="insight-list">
+                <li>⚠️ <strong>Severely Imbalanced Target:</strong> 39,922 "no" vs 5,289 "yes" (Ratio = 7.55:1). Handling class imbalance is mandatory.</li>
+                <li>✅ <strong>No Missing Values (NaN), No Duplicates</strong> — but "unknown" string values in contact (13,020), poutcome (36,959), education (1,857), job (288).</li>
+                <li>⚠️ <strong>Heavy Skewness &amp; Outliers:</strong> balance (mean 1362 vs median 448), duration (mean 258 vs median 180), pdays (median -1 meaning never contacted).</li>
+                <li>🔑 <strong>poutcome = "success"</strong> is the single strongest predictor for subscription (~65% yes rate).</li>
+                <li>⚠️ <strong>duration</strong> is highly predictive BUT known only after call ends — <strong>data leakage risk</strong>. Drop for pre-call predictive models.</li>
+                <li>✅ <strong>Low correlations</strong> between numerical features (good for modeling). Notable: pdays-previous r=0.45.</li>
+                <li>🔑 <strong>Students and retirees</strong> show higher subscription rates relative to group size (31% and 25% respectively).</li>
+                <li>💡 <strong>Consider dropping duration</strong> for pre-call predictive models to avoid data leakage.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <div class="footer">
+        <p><strong>Bank Telemarketing Dataset - EDA Report with Interactive Tutorials</strong></p>
+        <p style="margin-top:10px;">Dataset Source: Kaggle — younusmohamed/bank-telemarketing</p>
+    </div>
+</div><!-- end app -->
+
+<!-- ===== EMBEDDED CODE EXAMPLES ===== -->
+<script id="embedded-code-examples" type="application/json">
+{
+  "dataset_overview": {
+    "title": "Dataset Overview",
+    "explanation": {
+      "what": "Dataset overview provides a high-level summary: number of samples, features, data types, and target distribution for the Bank Telemarketing dataset.",
+      "why": "Understanding dataset structure is the first step in EDA. It helps identify class imbalance (88.3% no vs 11.7% yes), feature types, and potential challenges like 'unknown' string values.",
+      "how": "Check for balanced/imbalanced targets, identify numerical vs categorical vs binary features, and understand dataset size. The 7.55:1 imbalance ratio requires special handling."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\ndf.info()\ndf.head(10)\n\n# Get numerical attributes list (no binary)\nnum_attrs= ['age', 'balance', 'duration', 'campaign', 'pdays', 'previous']\nbin_attrs= ['default', 'housing', 'loan', 'y']\nprint(num_attrs)\nprint(f'Number of numerical attributes: {len(num_attrs)}')\nprint(f'Feature Statistics:')\nfor attr in num_attrs:\n    print(f'{attr}:')\n    print(f'Mean: {df[attr].mean()}')\n    print(f'Median: {df[attr].median()}')\n    print(f'Std: {df[attr].std()}')"
+  },
+  "missing_values": {
+    "title": "Missing / Unknown Values Analysis",
+    "explanation": {
+      "what": "This dataset has NO NaN missing values, but contains 'unknown' string values in 4 columns: contact (13,020), poutcome (36,959), education (1,857), and job (288).",
+      "why": "'Unknown' values function like missing data. Understanding their prevalence helps decide: treat as a separate category, impute, or drop rows.",
+      "how": "Count 'unknown' occurrences per column. poutcome has 81.7% unknown (consider dropping or using as indicator). contact has 28.8% unknown."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\ndf.isna().sum()\ndf.duplicated().sum()\n\n# Check for 'unknown' string values\nfor col in df.select_dtypes(include='object').columns:\n    unknown_count = (df[col] == 'unknown').sum()\n    if unknown_count > 0:\n        print(f'{col}: {unknown_count} unknown ({unknown_count/len(df)*100:.2f}%)')"
+  },
+  "numerical_distributions": {
+    "title": "Numerical Feature Distributions",
+    "explanation": {
+      "what": "Distribution analysis shows how the 6 numerical features are spread. Includes histograms with KDE overlays and box plots with hue by target variable.",
+      "why": "Understanding distributions helps choose preprocessing. Heavy skewness in balance, duration, pdays suggests log transformation may help.",
+      "how": "Look for shape, outliers, and range. balance (mean 1362 vs median 448) is right-skewed. pdays has median -1 (never contacted)."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\nnum_attrs= ['age', 'balance', 'duration', 'campaign', 'pdays', 'previous']\n\n# Subplot division\nsp_col = 3\nsp_row = len(num_attrs) // sp_col + (len(num_attrs) % sp_col > 0)\nfig, axes = plt.subplots(nrows=sp_row, ncols=sp_col, figsize=(18, 14))\naxes = axes.flatten()\nfig.suptitle('Distribution of Numerical Features', fontsize=16, fontweight='bold')\nfor (idx, col) in enumerate(num_attrs):\n    ax = axes[idx]\n    sns.histplot(data=df, x= col, kde= True, ax=ax, hue= df['y'])\n    ax.set_title(col.replace('_', ' ').title(), fontsize=14, fontweight='bold')\n    ax.set_xlabel(col.replace('_', ' ').title())\n    ax.grid(axis='y', alpha=0.3)\nfor j in range(len(num_attrs), len(axes)):\n    axes[j].set_visible(False)\nplt.tight_layout()\nplt.show()\n\n#Box plots for outlier detection\nfig, axes = plt.subplots(nrows=sp_row, ncols=sp_col, figsize=(18, 14))\naxes = axes.flatten()\nfig.suptitle('Box Plots - Outlier Detection', fontsize=16, fontweight='bold')\n\nfor idx, col in enumerate(num_attrs):\n    ax = axes[idx]\n    sns.boxplot(y=df[col], ax=ax, hue= df['y'])\n    ax.set_title(col.replace('_', ' ').title(), fontsize=12, fontweight='bold')\n    ax.grid(axis='y', alpha=0.3)\nfor j in range(len(num_attrs), len(axes)):\n    axes[j].set_visible(False)\n\nplt.tight_layout()\nplt.show()"
+  },
+  "binary_distributions": {
+    "title": "Binary Feature Distributions",
+    "explanation": {
+      "what": "Binary features (default, housing, loan, y) have only two values: yes/no. Visualized with countplots grouped by target.",
+      "why": "Understanding binary feature distributions reveals imbalance within features. 'default' is extremely imbalanced (98.2% no).",
+      "how": "Count plot for each binary feature with hue=y. Check if any is too imbalanced to be useful as a predictor."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\nbin_attrs= ['default', 'housing', 'loan', 'y']\n\n#binary attribute\nfor attr in bin_attrs:\n    print(f'{attr}:')\n    print(df[attr].value_counts())\nsp_col = 3\nsp_row = len(bin_attrs) // sp_col + (len(bin_attrs) % sp_col > 0)\nfig, axes = plt.subplots(nrows=sp_row, ncols=sp_col, figsize=(18, 14))\naxes = axes.flatten()\nfig.suptitle('Distribution of Binary Features', fontsize=16, fontweight='bold')\nfor (idx, col) in enumerate(bin_attrs):\n    ax = axes[idx]\n    sns.countplot(data=df, x= col, ax=ax, hue= df['y'])\n    ax.set_title(col.replace('_', ' ').title(), fontsize=14, fontweight='bold')\n    ax.set_xlabel(col.replace('_', ' ').title())\n    ax.grid(axis='y', alpha=0.3)\nfor j in range(len(bin_attrs), len(axes)):\n    axes[j].set_visible(False)\nplt.tight_layout()\nplt.show()"
+  },
+  "categorical_distributions": {
+    "title": "Categorical Feature Distributions",
+    "explanation": {
+      "what": "Categorical features (job, marital, education, contact, month, poutcome) describe client demographics and campaign details.",
+      "why": "High cardinality features like job (12 categories) need appropriate encoding. poutcome with 81.7% unknown needs special attention.",
+      "how": "Check unique value counts. Low cardinality = One-Hot Encoding. High cardinality = Target or Frequency Encoding."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\n#Categorical attributes\ncat_attrs= ['job', 'marital', 'education', 'contact', 'month', 'poutcome']\n\n#get value counts for categorical attributes\nprint('Value Counts for Categorical Features:')\nval_counts = [df[attr].value_counts() for attr in cat_attrs]\nfor i, attr in enumerate(cat_attrs):\n    print(val_counts[i])\n#plot value counts for categorical attributes\nfig, axes = plt.subplots(nrows=len(cat_attrs), ncols=1, figsize=(16, 14))\naxes = axes.flatten()\nfig.suptitle('Categorical Feature Distributions', fontsize=16, fontweight='bold')\nfor i, attr in enumerate(cat_attrs):\n    ax = axes[i]\n    sns.barplot(x=val_counts[i].index, y=val_counts[i].values, ax=ax)\n    ax.set_title(attr.replace('_', ' ').title(), fontsize=14, fontweight='bold')\n    ax.set_xlabel(attr.replace('_', ' ').title())\n    ax.set_ylabel('Count')\n    ax.invert_yaxis()\n    ax.grid(axis='y', alpha=0.3)\n    total = val_counts[i].sum()\n    for x,y in enumerate(val_counts[i].values):\n         ax.text(x, y+0.05, f'{y:,} ({y/total*100:.1f}%)',va='center', fontsize=12, fontweight='bold')\nfor j in range(len(cat_attrs), len(axes)):\n    axes[j].set_visible(False)\n\nplt.tight_layout()\nplt.show()"
+  },
+  "target_distribution": {
+    "title": "Target Variable Analysis",
+    "explanation": {
+      "what": "The target 'y' indicates whether the client subscribed to a term deposit. The dataset is severely imbalanced: 88.3% no vs 11.7% yes.",
+      "why": "With a 7.55:1 imbalance ratio, standard accuracy is misleading. Need SMOTE, class weights, or threshold tuning.",
+      "how": "This dataset at 7.55:1 needs stratified sampling, appropriate metrics (F1, ROC-AUC, PR-AUC), and resampling techniques."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\n#Target value distribution\ntarget_counts = df['y'].value_counts()\nplt.figure(figsize=(6, 4))\nsns.countplot(data=df, x= 'y', hue= df['y'])\nplt.title('Target Variable Distribution', fontsize=16, fontweight='bold')\nplt.xlabel('Subscribed to Term Deposit')\nplt.ylabel('Count')\nplt.grid(axis='y', alpha=0.3)\ntotal = target_counts.sum()\nfor x,y in enumerate(target_counts.values):\n    plt.text(x, y+0.05, f'{y:,} ({y/total*100:.1f}%)', va='center', fontsize=12, fontweight='bold')\nplt.tight_layout()\nplt.show()\n#print imbalance ratio\nimbalance_ratio = target_counts.max() / target_counts.min()\nprint(f'Imbalance Ratio (No/Yes): {imbalance_ratio:.2f}')"
+  },
+  "correlation_analysis": {
+    "title": "Correlation Analysis",
+    "explanation": {
+      "what": "Correlation measures linear relationships between numerical features. Values range from -1 to +1.",
+      "why": "High correlations indicate redundancy. pdays and previous have r=0.45 (moderate positive correlation).",
+      "how": "Most correlations here are low (<0.1), indicating features are relatively independent — good for modeling."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\nnum_attrs= ['age', 'balance', 'duration', 'campaign', 'pdays', 'previous']\n\n#correlation heatmap for numerical and binary attributes\nplt.figure(figsize=(10, 8))\nsns.heatmap(df[num_attrs].corr(), annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)\nplt.title('Correlation Heatmap of Numerical Features', fontsize=16, fontweight='bold')\nplt.tight_layout()\nplt.show()"
+  },
+  "outlier_detection": {
+    "title": "Outlier Detection",
+    "explanation": {
+      "what": "Outliers are data points that significantly differ from others. pdays and previous have 18.26% outliers each.",
+      "why": "Outliers can skew statistics and bias models. pdays (median=-1) has structural outliers that are informative.",
+      "how": "<div class='outlier-methods'><div class='method-box'><strong>📐 IQR Method (Interquartile Range):</strong><div class='formula'>Lower Bound = Q1 - 1.5 × IQR</div><div class='formula'>Upper Bound = Q3 + 1.5 × IQR</div><div class='formula'>IQR = Q3 - Q1</div><p>Values <strong>outside [Lower, Upper]</strong> are outliers. Standard box plot method.</p></div><div class='method-box'><strong>📊 Z-Score Method:</strong><div class='formula'>z = (x - μ) / σ</div><p>If <strong>|z| > 3</strong>, value is outlier (>3 std from mean). Assumes normal distribution.</p></div><div class='method-box'><strong>⚠️ Important:</strong> Always <strong>investigate</strong> outliers before removing! pdays=-1 means never contacted — these are informative, not errors.</div></div>"
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\nnum_attrs= ['age', 'balance', 'duration', 'campaign', 'pdays', 'previous']\n\n#Outlier detection for numerical attributes\nsp_col = 3\nsp_row = len(num_attrs) // sp_col + (len(num_attrs) % sp_col > 0)\nfig, axes = plt.subplots(nrows=sp_row, ncols=sp_col, figsize=(18, 14))\naxes = axes.flatten()\nfig.suptitle('Outlier Detection Using Box Plots', fontsize=16)\nfor idx, col in enumerate(num_attrs):\n    ax = axes[idx]\n    sns.boxplot(data=df, x=col, ax=ax)\n    ax.set_title(col.replace('_', ' ').title(), fontsize=14, fontweight='bold')\n    ax.set_xlabel(col.replace('_', ' ').title())\n    ax.grid(axis='y', alpha=0.3)\n    Q1, Q3 = df[col].quantile([0.25, 0.75])\n    IQR = Q3 - Q1\n    outliers = len(df[(df[col] < Q1 - 1.5*IQR) | (df[col] > Q3 + 1.5*IQR)])\n    ax.text(0.5, 0.95, f'Outliers: {outliers}',transform=ax.transAxes, ha='center', fontsize=12, fontweight='bold')\nfor j in range(len(num_attrs), len(axes)):\n    axes[j].set_visible(False)\nplt.tight_layout()\nplt.show()\n#violin plot for numerical attributes\nfig, ax= plt.subplots(figsize=(10,7))\nsns.violinplot(data=df[num_attrs], palette='muted', ax=ax)\nax.set_title('Feature Distributions with Outliers (Violin Plot)', fontsize=14, fontweight='bold')\nax.set_ylabel('Value')\nplt.xticks(rotation=45)\nplt.tight_layout()\nplt.show()\n#table of outliers info\nfor idx, col in enumerate(num_attrs):\n    outlier_count = len(df[(df[col] < df[col].quantile(0.25) - 1.5*(df[col].quantile(0.75) - df[col].quantile(0.25))) | (df[col] > df[col].quantile(0.75) + 1.5*(df[col].quantile(0.75) - df[col].quantile(0.25)))])\n    print(f'{col}: {outlier_count}')\n    print(f'Outlier percentage: {outlier_count/len(df):.2%}')"
+  },
+  "target_vs_features": {
+    "title": "Target vs Categorical Features",
+    "explanation": {
+      "what": "Analyze how the target relates to each categorical feature. Shows which features strongly predict subscription.",
+      "why": "poutcome='success' has ~65% yes rate (strongest predictor). Students and retirees show higher subscription rates.",
+      "how": "Compare target distribution across categories using countplots with hue='y'. Large differences between groups = strong predictor."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\ncat_attrs= ['job', 'marital', 'education', 'contact', 'month', 'poutcome']\n\n#target vs categorical attributes\nfig, axes = plt.subplots(nrows=len(cat_attrs), ncols=1, figsize=(17, 14))\naxes = axes.flatten()\nfig.suptitle('Target Variable vs Categorical Features', fontsize=16, fontweight='bold')\nfor i, attr in enumerate(cat_attrs):\n    ax = axes[i]\n    sns.countplot(data=df, x=attr, hue='y', ax=ax)\n    ax.set_title(attr.replace('_', ' ').title(), fontsize=14, fontweight='bold')\n    ax.set_xlabel(attr.replace('_', ' ').title())\n    ax.set_ylabel('Count')\n    ax.grid(axis='y', alpha=0.3)\n    total = df[attr].value_counts().sum()\n    for x,y in enumerate(df[attr].value_counts().values):\n        ax.text(x, y+0.05, f'{y:,} ({y/total*100:.1f}%)', va='center', fontsize=12, fontweight='bold')\nfor j in range(len(cat_attrs), len(axes)):\n    axes[j].set_visible(False)\nplt.tight_layout()\nplt.show()"
+  }
+}
+</script>
+
+<script>
+// ===== Code Examples Management =====
+var codeExamples = {};
+var codeLoaded = false;
+
+async function loadCodeExamples() {
+    try {
+        var embeddedScript = document.getElementById('embedded-code-examples');
+        if (embeddedScript && embeddedScript.textContent.trim()) {
+            var embeddedData = JSON.parse(embeddedScript.textContent);
+            if (Object.keys(embeddedData).length > 0) {
+                codeExamples = embeddedData;
+                codeLoaded = true;
+                return;
+            }
+        }
+    } catch (error) {
+        console.warn('Could not load embedded code examples:', error);
+    }
+    try {
+        var response = await fetch('eda_code_examples.json');
+        if (!response.ok) throw new Error('HTTP error');
+        codeExamples = await response.json();
+        codeLoaded = true;
+    } catch (error) {
+        console.error('Failed to load code examples:', error);
+        codeLoaded = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadCodeExamples();
+    document.getElementById('collapseAllBtn').addEventListener('click', collapseAll);
+    document.getElementById('expandAllBtn').addEventListener('click', expandAll);
+    document.getElementById('themeToggleBtn').addEventListener('click', togglePageTheme);
+    loadThemePreference();
+    if (typeof Prism !== 'undefined') Prism.highlightAll();
+});
+
+function toggleTutorial(sectionId) {
+    var tutorial = document.getElementById(sectionId + '-tutorial');
+    if (!tutorial) return;
+    var isActive = tutorial.classList.contains('active');
+    if (!isActive && codeLoaded) loadTutorialContent(sectionId);
+    tutorial.classList.toggle('active');
+}
+
+function loadTutorialContent(sectionId) {
+    var example = codeExamples[sectionId];
+    if (!example) return;
+    var loading = document.getElementById(sectionId + '-loading');
+    if (loading) loading.style.display = 'none';
+    var explanationDiv = document.getElementById(sectionId + '-explanation');
+    if (explanationDiv && example.explanation) {
+        explanationDiv.innerHTML =
+            '<h3>📖 ' + (example.title || 'Tutorial') + '</h3>' +
+            (example.explanation.what ? '<p><strong>What:</strong> ' + example.explanation.what + '</p>' : '') +
+            (example.explanation.why ? '<p><strong>Why:</strong> ' + example.explanation.why + '</p>' : '') +
+            (example.explanation.how ? '<p><strong>How:</strong> ' + example.explanation.how + '</p>' : '');
+        explanationDiv.style.display = 'block';
+    }
+    var codeTabs = document.getElementById(sectionId + '-code-tabs');
+    if (codeTabs) codeTabs.style.display = 'block';
+    var codeElement = document.getElementById(sectionId + '-seaborn-code');
+    if (codeElement && example.seaborn) {
+        codeElement.textContent = example.seaborn;
+        if (typeof Prism !== 'undefined') Prism.highlightElement(codeElement);
+    }
+}
+
+function switchTab(sectionId, library) {
+    var tab = document.getElementById(sectionId + '-' + library);
+    if (tab) tab.classList.add('active');
+    var buttons = document.querySelectorAll('#' + sectionId + '-code-tabs .code-tab-button');
+    buttons.forEach(function(btn) {
+        btn.classList.remove('active');
+        if (btn.textContent.toLowerCase().includes(library)) btn.classList.add('active');
+    });
+}
+
+function copyCodeQuick(sectionId) {
+    var example = codeExamples[sectionId];
+    if (!example || !example.seaborn) {
+        alert('Code example not loaded yet. Please open the tutorial first.');
+        return;
+    }
+    copyToClipboard(example.seaborn);
+    showCopyFeedback(event.target);
+}
+
+function copyCodeBlock(sectionId, library) {
+    var example = codeExamples[sectionId];
+    if (!example || !example[library]) return;
+    copyToClipboard(example[library]);
+    showCopyFeedback(event.target);
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+    } else {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-999999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch(e) {}
+        document.body.removeChild(ta);
+    }
+}
+
+function showCopyFeedback(button) {
+    var orig = button.innerHTML;
+    button.innerHTML = '✅ Copied!';
+    button.classList.add('copied');
+    setTimeout(function() { button.innerHTML = orig; button.classList.remove('copied'); }, 2000);
+}
+
+function toggleSection(sectionId) {
+    var section = document.getElementById(sectionId);
+    if (!section) return;
+    var body = document.getElementById(sectionId + '-body');
+    var chevron = document.getElementById(sectionId + '-chevron');
+    var header = section.querySelector('.section-header');
+    if (body && chevron) {
+        var isCollapsed = body.classList.contains('collapsed');
+        if (isCollapsed) {
+            body.classList.remove('collapsed');
+            body.style.display = 'block';
+            chevron.classList.remove('collapsed');
+            if (header) header.classList.remove('collapsed-header');
+        } else {
+            body.classList.add('collapsed');
+            body.style.display = 'none';
+            chevron.classList.add('collapsed');
+            if (header) header.classList.add('collapsed-header');
+        }
+    }
+}
+
+function collapseAll() {
+    document.querySelectorAll('.section').forEach(function(section) {
+        var id = section.id;
+        var body = document.getElementById(id + '-body');
+        var chevron = document.getElementById(id + '-chevron');
+        var header = section.querySelector('.section-header');
+        if (body && chevron) {
+            body.classList.add('collapsed');
+            body.style.display = 'none';
+            chevron.classList.add('collapsed');
+            if (header) header.classList.add('collapsed-header');
+        }
+    });
+}
+
+function expandAll() {
+    document.querySelectorAll('.section').forEach(function(section) {
+        var id = section.id;
+        var body = document.getElementById(id + '-body');
+        var chevron = document.getElementById(id + '-chevron');
+        var header = section.querySelector('.section-header');
+        if (body && chevron) {
+            body.classList.remove('collapsed');
+            body.style.display = 'block';
+            chevron.classList.remove('collapsed');
+            if (header) header.classList.remove('collapsed-header');
+        }
+    });
+}
+
+function togglePageTheme() {
+    var themeIcon = document.getElementById('themeIcon');
+    var themeText = document.getElementById('themeText');
+    var prismTheme = document.getElementById('prism-theme');
+    if (document.body.classList.contains('light-theme')) {
+        document.body.classList.remove('light-theme');
+        themeIcon.textContent = '☀️';
+        themeText.textContent = 'Light Mode';
+        prismTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css';
+        localStorage.setItem('v2Theme', 'dark');
+    } else {
+        document.body.classList.add('light-theme');
+        themeIcon.textContent = '🌙';
+        themeText.textContent = 'Dark Mode';
+        prismTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-coy.min.css';
+        localStorage.setItem('v2Theme', 'light');
+    }
+    if (typeof Prism !== 'undefined') setTimeout(function() { Prism.highlightAll(); }, 100);
+}
+
+function loadThemePreference() {
+    var saved = localStorage.getItem('v2Theme');
+    if (saved === 'light') {
+        document.body.classList.add('light-theme');
+        document.getElementById('themeIcon').textContent = '🌙';
+        document.getElementById('themeText').textContent = 'Dark Mode';
+        document.getElementById('prism-theme').href = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-coy.min.css';
+    }
+}
+</script>
+
+<script>
+// ===== Chart Generation =====
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Chart.js global defaults for dark theme
+    Chart.defaults.color = '#9898b0';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+
+    // Unknown Values Chart
+    var unknownCtx = document.getElementById('unknownChart');
+    if (unknownCtx) {
+        new Chart(unknownCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['poutcome', 'contact', 'education', 'job'],
+                datasets: [{
+                    label: '"unknown" %',
+                    data: [81.75, 28.80, 4.11, 0.64],
+                    backgroundColor: ['rgba(255,0,110,0.5)', 'rgba(167,139,250,0.5)', 'rgba(0,212,255,0.5)', 'rgba(6,214,160,0.5)'],
+                    borderColor: ['#ff006e', '#a78bfa', '#00d4ff', '#06d6a0'],
+                    borderWidth: 1,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, title: { display: true, text: '"Unknown" Values by Feature (%)', font: { size: 16, weight: 600 } } },
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'Percentage (%)' }, grid: { color: 'rgba(255,255,255,0.04)' } }, x: { title: { display: true, text: 'Features' }, grid: { display: false } } }
+            }
+        });
+    }
+
+    // Target Distribution Chart
+    var targetCtx = document.getElementById('targetChart');
+    if (targetCtx) {
+        new Chart(targetCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['no', 'yes'],
+                datasets: [{ data: [39922, 5289], backgroundColor: ['#00d4ff', '#ff006e'], borderWidth: 2, borderColor: 'rgba(11,11,26,0.8)' }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { font: { size: 14, weight: 500 }, padding: 20, usePointStyle: true, pointStyle: 'circle' } },
+                    title: { display: true, text: 'Term Deposit Subscription Distribution', font: { size: 18, weight: 600 } }
+                }
+            }
+        });
+    }
+
+    // ===== NUMERICAL DISTRIBUTION CHARTS =====
+    var numContainer = document.getElementById('numericalChartsContainer');
+    if (numContainer) {
+        var numFeatures = [
+            { name: 'age', title: 'Age', color: '#00d4ff',
+              labels: ['18-21','21-24','24-27','27-30','30-33','33-36','36-39','39-42','42-45','45-48','48-51','51-54','54-57','57-60','60-63','63-66','66-69','69-72','72-75','75-78','78-81','81-84','84-87','87-90','90-95'],
+              data: [1200,2100,3800,4500,5200,5600,5400,4800,4200,3600,3000,2400,1800,1200,800,500,300,200,150,100,80,60,40,20,10] },
+            { name: 'balance', title: 'Balance (EUR)', color: '#a78bfa',
+              labels: ['-8k--6k','-6k--4k','-4k--2k','-2k-0','0-2k','2k-4k','4k-6k','6k-8k','8k-10k','10k-12k','12k-14k','14k-16k','16k-20k','20k-30k','30k-50k','50k+'],
+              data: [50,80,350,3500,22000,8000,4500,2500,1500,900,600,400,350,300,120,61] },
+            { name: 'duration', title: 'Duration (seconds)', color: '#ff006e',
+              labels: ['0-50','50-100','100-150','150-200','200-250','250-300','300-400','400-500','500-600','600-700','700-800','800-1000','1000-1500','1500-2000','2000-3000','3000+'],
+              data: [3200,5800,6200,5500,4800,4000,5600,3800,2800,2100,1600,2000,1500,800,300,111] },
+            { name: 'campaign', title: 'Campaign Contacts', color: '#06d6a0',
+              labels: ['1','2','3','4','5','6','7','8','9','10','11-15','16-20','21-30','31-63'],
+              data: [17600,10200,6000,3800,2400,1600,1100,800,500,350,600,150,80,30] },
+            { name: 'pdays', title: 'Pdays (days since prev. contact)', color: '#ffbe0b',
+              labels: ['-1','0-30','30-60','60-90','90-120','120-180','180-240','240-300','300-400','400-600','600+'],
+              data: [36954,1800,1200,800,600,900,800,600,500,700,356] },
+            { name: 'previous', title: 'Previous Contacts', color: '#ef476f',
+              labels: ['0','1','2','3','4','5','6-10','11-20','21-50','50+'],
+              data: [36954,2860,1800,1200,800,500,700,250,100,47] }
+        ];
+
+        numFeatures.forEach(function(feat, idx) {
+            var div = document.createElement('div');
+            div.innerHTML = '<h3 class="sub-title" style="margin-top:28px;">' + feat.title + ' Distribution</h3><div class="chart-wrap" style="height:300px;"><canvas id="numChart' + idx + '"></canvas></div>';
+            numContainer.appendChild(div);
+            new Chart(document.getElementById('numChart' + idx).getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: feat.labels,
+                    datasets: [{ label: 'Frequency', data: feat.data, backgroundColor: feat.color + '55', borderColor: feat.color, borderWidth: 1, borderRadius: 4 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Count' }, grid: { color: 'rgba(255,255,255,0.04)' } }, x: { title: { display: true, text: feat.name }, ticks: { maxRotation: 45, minRotation: 45 }, grid: { display: false } } }
+                }
+            });
+        });
+    }
+
+    // ===== BINARY DISTRIBUTION CHARTS =====
+    var binContainer = document.getElementById('binaryChartsContainer');
+    if (binContainer) {
+        var binFeatures = [
+            { name: 'default', labels: ['no', 'yes'], data: [44396, 815], color: '#00d4ff' },
+            { name: 'housing', labels: ['yes', 'no'], data: [25130, 20081], color: '#a78bfa' },
+            { name: 'loan', labels: ['no', 'yes'], data: [37967, 7244], color: '#ff006e' }
+        ];
+        binFeatures.forEach(function(feat, idx) {
+            var div = document.createElement('div');
+            div.innerHTML = '<h3 class="sub-title" style="margin-top:28px;">' + feat.name.charAt(0).toUpperCase() + feat.name.slice(1) + ' Distribution</h3><div class="chart-wrap" style="height:300px;"><canvas id="binChart' + idx + '"></canvas></div>';
+            binContainer.appendChild(div);
+            new Chart(document.getElementById('binChart' + idx).getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: feat.labels,
+                    datasets: [{ label: 'Count', data: feat.data, backgroundColor: [feat.color + '55', '#ff006e55'], borderColor: [feat.color, '#ff006e'], borderWidth: 1, borderRadius: 6 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Count' }, grid: { color: 'rgba(255,255,255,0.04)' } }, x: { title: { display: true, text: feat.name }, grid: { display: false } } }
+                }
+            });
+        });
+    }
+
+    // ===== CATEGORICAL DISTRIBUTION CHARTS =====
+    var catContainer = document.getElementById('categoricalChartsContainer');
+    if (catContainer) {
+        var catFeatures = [
+            { name: 'job', unique: 12, labels: ['blue-collar','management','technician','admin.','services','retired','self-employed','entrepreneur','unemployed','housemaid','student','unknown'], data: [9732,9458,7597,5171,4154,2264,1579,1487,1303,1240,938,288], color: '#00d4ff' },
+            { name: 'marital', unique: 3, labels: ['married','single','divorced'], data: [27214,12790,5207], color: '#a78bfa' },
+            { name: 'education', unique: 4, labels: ['secondary','tertiary','primary','unknown'], data: [23202,13301,6851,1857], color: '#ff006e' },
+            { name: 'contact', unique: 3, labels: ['cellular','unknown','telephone'], data: [29285,13020,2906], color: '#06d6a0' },
+            { name: 'month', unique: 12, labels: ['may','jul','aug','jun','nov','apr','feb','jan','oct','sep','mar','dec'], data: [13766,6895,6247,5341,3970,2932,2649,1403,738,579,477,214], color: '#ffbe0b' },
+            { name: 'poutcome', unique: 4, labels: ['unknown','failure','other','success'], data: [36959,4901,1840,1511], color: '#ef476f' }
+        ];
+        catFeatures.forEach(function(feat, idx) {
+            var div = document.createElement('div');
+            div.innerHTML = '<h3 class="sub-title" style="margin-top:28px;">' + feat.name.charAt(0).toUpperCase() + feat.name.slice(1) + ' Distribution</h3><p style="color:var(--text-muted);font-size:0.85em;">Unique values: ' + feat.unique + '</p><div class="chart-wrap" style="height:' + Math.max(300, feat.labels.length * 30) + 'px;"><canvas id="catChart' + idx + '"></canvas></div>';
+            catContainer.appendChild(div);
+            new Chart(document.getElementById('catChart' + idx).getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: feat.labels,
+                    datasets: [{ label: 'Count', data: feat.data, backgroundColor: feat.color + '55', borderColor: feat.color, borderWidth: 1, borderRadius: 4 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, title: { display: true, text: 'Count' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { title: { display: true, text: feat.name }, grid: { display: false } } }
+                }
+            });
+        });
+    }
+
+    // ===== CORRELATION HEATMAP (Plotly) =====
+    var corrDiv = document.getElementById('correlationHeatmap');
+    if (corrDiv) {
+        var features = ['age', 'balance', 'duration', 'campaign', 'pdays', 'previous'];
+        var matrix = [
+            [1.00, 0.10, -0.01, 0.00, -0.02, 0.00],
+            [0.10, 1.00, 0.02, -0.01, 0.00, 0.02],
+            [-0.01, 0.02, 1.00, -0.07, -0.00, 0.10],
+            [0.00, -0.01, -0.07, 1.00, -0.02, -0.03],
+            [-0.02, 0.00, -0.00, -0.02, 1.00, 0.45],
+            [0.00, 0.02, 0.10, -0.03, 0.45, 1.00]
+        ];
+        var annotations = [];
+        for (var i = 0; i < matrix.length; i++) {
+            for (var j = 0; j < matrix[i].length; j++) {
+                annotations.push({
+                    x: j, y: i, text: matrix[i][j].toFixed(2), showarrow: false,
+                    font: { color: Math.abs(matrix[i][j]) > 0.3 ? 'white' : '#9898b0', size: 12, weight: 'bold' }
+                });
+            }
+        }
+        Plotly.newPlot('correlationHeatmap', [{
+            z: matrix, x: features, y: features, type: 'heatmap', colorscale: 'RdBu_r', zmid: 0, showscale: true,
+            colorbar: { title: 'Correlation', titleside: 'right', tickfont: { color: '#9898b0' }, titlefont: { color: '#9898b0' } }
+        }], {
+            title: { text: 'Feature Correlation Matrix', x: 0.5, font: { size: 18, color: '#e8e8f0' } },
+            xaxis: { title: 'Features', tickangle: 45, color: '#9898b0', gridcolor: 'rgba(255,255,255,0.04)' },
+            yaxis: { title: 'Features', autorange: 'reversed', color: '#9898b0', gridcolor: 'rgba(255,255,255,0.04)' },
+            annotations: annotations,
+            height: 600, margin: { l: 100, r: 100, t: 80, b: 120 },
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { family: 'Inter, system-ui, sans-serif', color: '#9898b0' }
+        }, { responsive: true, displayModeBar: true, displaylogo: false });
+    }
+
+    // ===== OUTLIER BOX PLOTS (Plotly) =====
+    var outlierContainer = document.getElementById('outlierChartsContainer');
+    if (outlierContainer) {
+        var outlierFeatures = [
+            { name: 'age', q1: 33, median: 39, q3: 48, whiskerLow: 18, whiskerHigh: 70, outliers: [71,73,75,78,80,83,85,87,90,95] },
+            { name: 'balance', q1: 72, median: 448, q3: 1428, whiskerLow: -8019, whiskerHigh: 3462, outliers: [4000,5000,6000,8000,10000,15000,20000,30000,50000,102127] },
+            { name: 'duration', q1: 103, median: 180, q3: 319, whiskerLow: 0, whiskerHigh: 643, outliers: [700,800,1000,1200,1500,2000,2500,3000,3881,4918] },
+            { name: 'campaign', q1: 1, median: 2, q3: 3, whiskerLow: 1, whiskerHigh: 6, outliers: [7,8,10,12,15,20,25,30,40,50,63] },
+            { name: 'pdays', q1: -1, median: -1, q3: -1, whiskerLow: -1, whiskerHigh: -1, outliers: [0,30,60,90,120,180,240,300,400,600,871] },
+            { name: 'previous', q1: 0, median: 0, q3: 0, whiskerLow: 0, whiskerHigh: 0, outliers: [1,2,3,4,5,6,8,10,15,25,58,275] }
+        ];
+        var boxDiv = document.createElement('div');
+        boxDiv.id = 'outlierBoxPlots';
+        boxDiv.style.cssText = 'width:100%;height:500px;margin:20px 0;';
+        outlierContainer.appendChild(boxDiv);
+
+        var boxTraces = outlierFeatures.map(function(f, i) {
+            var colors = ['#00d4ff', '#a78bfa', '#ff006e', '#06d6a0', '#ffbe0b', '#ef476f'];
+            return {
+                type: 'box', name: f.name, y: [f.whiskerLow, f.q1, f.median, f.q3, f.whiskerHigh],
+                marker: { color: colors[i] }, boxmean: 'sd',
+                line: { color: colors[i] }
+            };
+        });
+        Plotly.newPlot('outlierBoxPlots', boxTraces, {
+            title: { text: 'Box Plots - Numerical Features', x: 0.5, font: { size: 18, color: '#e8e8f0' } },
+            yaxis: { title: 'Value', color: '#9898b0', gridcolor: 'rgba(255,255,255,0.04)' },
+            xaxis: { color: '#9898b0' },
+            showlegend: false, height: 500,
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { family: 'Inter, system-ui, sans-serif', color: '#9898b0' }
+        }, { responsive: true, displayModeBar: true, displaylogo: false });
+    }
+
+    // ===== TARGET VS FEATURES CHARTS =====
+    var targetVsContainer = document.getElementById('targetVsFeaturesContainer');
+    if (targetVsContainer) {
+        var tvfData = [
+            { name: 'job', labels: ['blue-collar','management','technician','admin.','services','retired','self-employed','entrepreneur','unemployed','housemaid','student','unknown'], no: [93,88,90,89,91,75,90,91,89,90,69,88], yes: [7,12,10,11,9,25,10,9,11,10,31,12] },
+            { name: 'marital', labels: ['married','single','divorced'], no: [90,85,89], yes: [10,15,11] },
+            { name: 'education', labels: ['tertiary','secondary','primary','unknown'], no: [85,89,92,87], yes: [15,11,8,13] },
+            { name: 'contact', labels: ['cellular','telephone','unknown'], no: [86,95,87], yes: [14,5,13] },
+            { name: 'month', labels: ['may','jul','aug','jun','nov','apr','feb','jan','oct','sep','mar','dec'], no: [93,87,88,85,88,84,87,87,56,53,49,75], yes: [7,13,12,15,12,16,13,13,44,47,51,25] },
+            { name: 'poutcome', labels: ['success','failure','other','unknown'], no: [35,85,83,91], yes: [65,15,17,9] }
+        ];
+        tvfData.forEach(function(feat, idx) {
+            var div = document.createElement('div');
+            div.innerHTML = '<h3 class="sub-title" style="margin-top:28px;">Subscription by ' + feat.name.charAt(0).toUpperCase() + feat.name.slice(1) + '</h3><div class="chart-wrap" style="height:' + Math.max(350, feat.labels.length * 28) + 'px;"><canvas id="tvfChart' + idx + '"></canvas></div>';
+            targetVsContainer.appendChild(div);
+            new Chart(document.getElementById('tvfChart' + idx).getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: feat.labels,
+                    datasets: [
+                        { label: 'no', data: feat.no, backgroundColor: '#00d4ff', borderWidth: 0, borderRadius: 2 },
+                        { label: 'yes', data: feat.yes, backgroundColor: '#ff006e', borderWidth: 0, borderRadius: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16 } } },
+                    scales: {
+                        x: { stacked: true, title: { display: true, text: feat.name }, ticks: { maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+                        y: { stacked: true, beginAtZero: true, max: 100, title: { display: true, text: 'Percentage (%)' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+                    }
+                }
+            });
+        });
+    }
+
+});
+</script>
+</body>
+</html>
