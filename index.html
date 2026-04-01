@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Exploratory Data Analysis - CaffeineAddicted Group Project">
+    <title>EDA | CaffeineAddicted</title>
+
+    <!-- Favicon: coffee cup emoji -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===== CSS Reset & Base ===== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --coffee-dark: #1a0e0a;
+            --coffee-medium: #3c2415;
+            --coffee-light: #6f4e37;
+            --coffee-cream: #c8a882;
+            --coffee-highlight: #d4a574;
+            --accent-blue: #4a9eff;
+            --accent-cyan: #00d4ff;
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a2e;
+            --text-primary: #f0ece8;
+            --text-secondary: #a89b8c;
+            --text-muted: #6b5f54;
+            --glow-coffee: rgba(212, 165, 116, 0.3);
+            --glow-blue: rgba(74, 158, 255, 0.3);
+            --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ===== Animated Background ===== */
+        .bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Floating coffee beans / particles */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0;
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 0;
+                transform: translateY(100vh) rotate(0deg) scale(0.5);
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-10vh) rotate(360deg) scale(1);
+            }
+        }
+
+        /* Gradient orbs */
+        .gradient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .orb-1 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(111, 78, 55, 0.15), transparent 70%);
+            top: -10%;
+            right: -10%;
+            animation: orbFloat1 20s ease-in-out infinite;
+        }
+
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(74, 158, 255, 0.08), transparent 70%);
+            bottom: -5%;
+            left: -5%;
+            animation: orbFloat2 25s ease-in-out infinite;
+        }
+
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(212, 165, 116, 0.1), transparent 70%);
+            top: 40%;
+            left: 30%;
+            animation: orbFloat3 18s ease-in-out infinite;
+        }
+
+        @keyframes orbFloat1 {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(-40px, 30px); }
+            66% { transform: translate(20px, -20px); }
+        }
+
+        @keyframes orbFloat2 {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(30px, -40px); }
+            66% { transform: translate(-20px, 20px); }
+        }
+
+        @keyframes orbFloat3 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(40px, -30px); }
+        }
+
+        /* ===== Main Container ===== */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== Nav Bar ===== */
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .nav-logo {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--coffee-light), var(--coffee-highlight));
+            border-radius: 12px;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 15px rgba(212, 165, 116, 0.2);
+        }
+
+        .nav-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-title span {
+            color: var(--coffee-highlight);
+        }
+
+        .nav-badge {
+            padding: 0.35rem 0.85rem;
+            background: rgba(212, 165, 116, 0.1);
+            border: 1px solid rgba(212, 165, 116, 0.2);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--coffee-cream);
+            letter-spacing: 0.04em;
+        }
+
+        /* ===== Hero Section ===== */
+        .hero {
+            text-align: center;
+            padding: 3rem 0 4rem;
+            position: relative;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            background: linear-gradient(135deg, rgba(111, 78, 55, 0.2), rgba(212, 165, 116, 0.1));
+            border: 1px solid rgba(212, 165, 116, 0.15);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--coffee-cream);
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.03em;
+        }
+
+        .hero-eyebrow .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--coffee-highlight);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .hero-course {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.02em;
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--coffee-cream) 50%, var(--coffee-highlight) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-bottom: 2.5rem;
+            line-height: 1.5;
+        }
+
+        .hero-subtitle strong {
+            color: var(--coffee-cream);
+            font-weight: 600;
+        }
+
+        /* Team members */
+        .team {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .team-member {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 1.2rem;
+            background: rgba(26, 26, 46, 0.8);
+            border: 1px solid rgba(200, 168, 130, 0.12);
+            border-radius: 14px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s var(--transition-smooth);
+        }
+
+        .team-member:hover {
+            border-color: rgba(212, 165, 116, 0.3);
+            background: rgba(26, 26, 46, 0.95);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .team-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--coffee-light), var(--coffee-highlight));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--bg-primary);
+            flex-shrink: 0;
+        }
+
+        .team-info {
+            text-align: left;
+        }
+
+        .team-name {
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .team-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Divider */
+        .divider {
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--coffee-light), var(--coffee-highlight));
+            border-radius: 2px;
+            margin: 3rem auto 1.5rem;
+        }
+
+        /* ===== Section Title ===== */
+        .section-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--coffee-highlight);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }
+
+        /* ===== Cards Grid ===== */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        /* Card Base */
+        .card {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid rgba(200, 168, 130, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            text-decoration: none;
+            color: inherit;
+            overflow: hidden;
+            transition: all 0.4s var(--transition-smooth);
+            display: flex;
+            flex-direction: column;
+            min-height: 260px;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 20px 20px 0 0;
+            transition: all 0.4s var(--transition-smooth);
+        }
+
+        /* Active Card */
+        .card--active::before {
+            background: linear-gradient(90deg, var(--coffee-light), var(--coffee-highlight), var(--accent-blue));
+        }
+
+        .card--active:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(212, 165, 116, 0.3);
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                0 0 40px rgba(212, 165, 116, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .card--active:hover::before {
+            height: 4px;
+            box-shadow: 0 0 20px rgba(212, 165, 116, 0.3);
+        }
+
+        .card--active:hover .card-icon {
+            transform: scale(1.1) rotate(-5deg);
+            box-shadow: 0 8px 25px rgba(212, 165, 116, 0.3);
+        }
+
+        .card--active:hover .card-arrow {
+            transform: translate(4px, -4px);
+            opacity: 1;
+        }
+
+        /* Disabled Card */
+        .card--disabled {
+            cursor: default;
+            opacity: 0.5;
+        }
+
+        .card--disabled::before {
+            background: linear-gradient(90deg, rgba(107, 95, 84, 0.3), rgba(107, 95, 84, 0.1));
+        }
+
+        .card--disabled:hover {
+            transform: none;
+        }
+
+        .card--disabled .card-icon {
+            filter: grayscale(0.5);
+            opacity: 0.6;
+        }
+
+        /* Card Icon */
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+            transition: all 0.4s var(--transition-smooth);
+            position: relative;
+        }
+
+        .card-icon--tabular {
+            background: linear-gradient(135deg, rgba(74, 158, 255, 0.15), rgba(0, 212, 255, 0.1));
+            border: 1px solid rgba(74, 158, 255, 0.2);
+        }
+
+        .card-icon--text {
+            background: linear-gradient(135deg, rgba(168, 155, 140, 0.15), rgba(168, 155, 140, 0.1));
+            border: 1px solid rgba(168, 155, 140, 0.2);
+        }
+
+        .card-icon--image {
+            background: linear-gradient(135deg, rgba(168, 155, 140, 0.15), rgba(168, 155, 140, 0.1));
+            border: 1px solid rgba(168, 155, 140, 0.2);
+        }
+
+        .card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .card-arrow {
+            color: var(--coffee-highlight);
+            font-size: 1.2rem;
+            opacity: 0.4;
+            transition: all 0.4s var(--transition-smooth);
+            margin-top: 0.25rem;
+        }
+
+        .card-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.7rem;
+            border-radius: 100px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            width: fit-content;
+        }
+
+        .card-badge--ready {
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .card-badge--soon {
+            background: rgba(168, 155, 140, 0.1);
+            border: 1px solid rgba(168, 155, 140, 0.15);
+            color: var(--text-muted);
+        }
+
+        .badge-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+
+        .badge-dot--ready {
+            background: #4ade80;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .badge-dot--soon {
+            background: var(--text-muted);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .card--disabled .card-title {
+            color: var(--text-secondary);
+        }
+
+        .card-desc {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        .card--disabled .card-desc {
+            color: var(--text-muted);
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(200, 168, 130, 0.08);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .card--active .card-footer {
+            color: var(--coffee-cream);
+        }
+
+        .card-footer svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        /* ===== Steam Animation ===== */
+        .steam-container {
+            position: absolute;
+            top: -20px;
+            right: 20px;
+            width: 40px;
+            height: 60px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s var(--transition-smooth);
+        }
+
+        .card--active:hover .steam-container {
+            opacity: 0.6;
+        }
+
+        .steam {
+            position: absolute;
+            bottom: 0;
+            width: 8px;
+            background: linear-gradient(to top, rgba(200, 168, 130, 0.3), transparent);
+            border-radius: 50%;
+            filter: blur(3px);
+            animation: steam 2s ease-in-out infinite;
+        }
+
+        .steam:nth-child(1) { left: 5px; animation-delay: 0s; height: 30px; }
+        .steam:nth-child(2) { left: 15px; animation-delay: 0.4s; height: 40px; }
+        .steam:nth-child(3) { left: 25px; animation-delay: 0.8s; height: 25px; }
+
+        @keyframes steam {
+            0% { transform: translateY(0) scaleX(1); opacity: 0.6; }
+            50% { transform: translateY(-15px) scaleX(1.5); opacity: 0.3; }
+            100% { transform: translateY(-30px) scaleX(0.8); opacity: 0; }
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            margin-top: auto;
+            padding: 2rem 0;
+            text-align: center;
+            border-top: 1px solid rgba(200, 168, 130, 0.08);
+        }
+
+        .footer-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .footer-content .coffee-icon {
+            font-size: 1rem;
+            animation: coffeeWiggle 3s ease-in-out infinite;
+        }
+
+        @keyframes coffeeWiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+
+        .footer-links {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .footer-link {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-link:hover {
+            color: var(--coffee-cream);
+        }
+
+        /* ===== Coffee Bean Decoration ===== */
+        .coffee-beans {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bean {
+            position: absolute;
+            font-size: 1rem;
+            opacity: 0.06;
+            animation: beanDrift linear infinite;
+        }
+
+        @keyframes beanDrift {
+            0% { transform: translateY(110vh) rotate(0deg); }
+            100% { transform: translateY(-10vh) rotate(720deg); }
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.25rem;
+            }
+
+            .nav {
+                margin-bottom: 1rem;
+            }
+
+            .hero {
+                padding: 2rem 0 3rem;
+            }
+
+            .team {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .team-member {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .card {
+                min-height: 220px;
+            }
+
+            .nav-badge {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.95rem;
+            }
+        }
+
+        /* ===== Selection ===== */
+        ::selection {
+            background: rgba(212, 165, 116, 0.3);
+            color: var(--text-primary);
+        }
+
+        /* ===== Scrollbar ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--coffee-medium);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--coffee-light);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Decorations -->
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+    <div class="gradient-orb orb-3"></div>
+
+    <div class="coffee-beans" id="coffeeBeans"></div>
+
+    <!-- Main Container -->
+    <div class="container">
+
+        <!-- Navigation -->
+        <nav class="nav" role="navigation" aria-label="Main navigation">
+            <a href="#" class="nav-brand" aria-label="CaffeineAddicted Home">
+                <div class="nav-logo">☕</div>
+                <div class="nav-title">Caffeine<span>Addicted</span></div>
+            </a>
+            <div class="nav-badge">HK252 • 2026</div>
+        </nav>
+
+        <!-- Hero Section -->
+        <header class="hero">
+            <div class="hero-eyebrow">
+                <span class="dot"></span>
+                Programming for AI &amp; Data Science
+            </div>
+
+            <p class="hero-course">University Assignment</p>
+
+            <h1 class="hero-title">Exploratory Data<br>Analysis</h1>
+
+            <p class="hero-subtitle">
+                An EDA project by <strong>CaffeineAddicted</strong> - fueled by curiosity and coffee.
+            </p>
+            <p class="hero-subtitle">
+                (Actually we need more sleeping T.T)
+            </p>
+
+            <!-- Team Members -->
+            <div class="team">
+                <div class="team-member">
+                    <div class="team-avatar">MT</div>
+                    <div class="team-info">
+                        <div class="team-name">Mai Thiện Ngôn</div>
+                        <div class="team-id">ID: 2352819</div>
+                    </div>
+                </div>
+                <div class="team-member">
+                    <div class="team-avatar">PQ</div>
+                    <div class="team-info">
+                        <div class="team-name">Phạm Trí Quang</div>
+                        <div class="team-id">ID: 2352976</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Divider -->
+        <div class="divider"></div>
+
+        <!-- Section Header -->
+        <section class="section-header">
+            <p class="section-label">EDA Reports</p>
+        </section>
+
+        <!-- Cards Grid -->
+        <div class="cards-grid">
+
+            <!-- Card 1: Tabular Dataset (Active) -->
+            <a href="./tabular/eda_report.html" class="card card--active" aria-label="View Tabular Dataset EDA Report">
+                <div class="steam-container">
+                    <div class="steam"></div>
+                    <div class="steam"></div>
+                    <div class="steam"></div>
+                </div>
+                <div class="card-top">
+                    <div class="card-icon card-icon--tabular">
+                        <!-- Table/grid icon -->
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-blue);">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="3" y1="9" x2="21" y2="9"/>
+                            <line x1="3" y1="15" x2="21" y2="15"/>
+                            <line x1="9" y1="3" x2="9" y2="21"/>
+                            <line x1="15" y1="3" x2="15" y2="21"/>
+                        </svg>
+                    </div>
+                    <div class="card-arrow">↗</div>
+                </div>
+                <div class="card-badge card-badge--ready">
+                    <span class="badge-dot badge-dot--ready"></span>
+                    Available
+                </div>
+                <h3 class="card-title">Tabular Dataset</h3>
+                <p class="card-desc">Structured data analysis with statistical summaries, distributions, correlations, and visual insights from tabular data sources.</p>
+                <div class="card-footer">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14"/>
+                        <path d="m12 5 7 7-7 7"/>
+                    </svg>
+                    View full report
+                </div>
+            </a>
+
+            <!-- Card 2: Text Dataset (Coming Soon) -->
+            <div class="card card--disabled" aria-label="Text Dataset - Coming Soon">
+                <div class="card-top">
+                    <div class="card-icon card-icon--text">
+                        <!-- Text/document icon -->
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </div>
+                    <div class="card-arrow" style="opacity: 0.15;">↗</div>
+                </div>
+                <div class="card-badge card-badge--soon">
+                    <span class="badge-dot badge-dot--soon"></span>
+                    Coming Soon
+                </div>
+                <h3 class="card-title">Text Dataset</h3>
+                <p class="card-desc">Natural language analysis including word frequencies, sentiment patterns, topic modeling, and text preprocessing insights.</p>
+                <div class="card-footer">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    In development
+                </div>
+            </div>
+
+            <!-- Card 3: Image Dataset (Coming Soon) -->
+            <div class="card card--disabled" aria-label="Image Dataset - Coming Soon">
+                <div class="card-top">
+                    <div class="card-icon card-icon--image">
+                        <!-- Image icon -->
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                    </div>
+                    <div class="card-arrow" style="opacity: 0.15;">↗</div>
+                </div>
+                <div class="card-badge card-badge--soon">
+                    <span class="badge-dot badge-dot--soon"></span>
+                    Coming Soon
+                </div>
+                <h3 class="card-title">Image Dataset</h3>
+                <p class="card-desc">Visual data exploration covering pixel distributions, color channel analysis, image classification metrics, and sample visualizations.</p>
+                <div class="card-footer">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    In development
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <span>Built with</span>
+                <span class="coffee-icon">☕</span>
+                <span>by CaffeineAddicted</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- JavaScript: Animated Background Particles -->
+    <script>
+        // Create floating coffee bean particles
+        (function() {
+            const container = document.getElementById('coffeeBeans');
+            const beans = ['☕', '✦', '◆', '●'];
+            const beanCount = 12;
+
+            for (let i = 0; i < beanCount; i++) {
+                const bean = document.createElement('div');
+                bean.classList.add('bean');
+                bean.textContent = beans[Math.floor(Math.random() * beans.length)];
+                bean.style.left = Math.random() * 100 + '%';
+                bean.style.fontSize = (0.6 + Math.random() * 0.8) + 'rem';
+                bean.style.animationDuration = (15 + Math.random() * 25) + 's';
+                bean.style.animationDelay = -(Math.random() * 30) + 's';
+                bean.style.opacity = 0.03 + Math.random() * 0.05;
+                container.appendChild(bean);
+            }
+        })();
+
+        // Add subtle parallax to gradient orbs on mouse move
+        (function() {
+            const orbs = document.querySelectorAll('.gradient-orb');
+            let ticking = false;
+
+            document.addEventListener('mousemove', function(e) {
+                if (!ticking) {
+                    requestAnimationFrame(function() {
+                        const x = (e.clientX / window.innerWidth - 0.5) * 2;
+                        const y = (e.clientY / window.innerHeight - 0.5) * 2;
+
+                        orbs.forEach(function(orb, i) {
+                            const factor = (i + 1) * 8;
+                            orb.style.transform = 'translate(' + (x * factor) + 'px, ' + (y * factor) + 'px)';
+                        });
+
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+        })();
+    </script>
+
+</body>
+</html>
