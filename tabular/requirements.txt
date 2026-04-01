@@ -1,0 +1,6 @@
+pandas
+kagglehub
+seaborn
+openpyxl
+matplotlib
+ipywidgets

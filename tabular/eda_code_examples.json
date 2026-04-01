@@ -1,0 +1,83 @@
+{
+  "dataset_overview": {
+    "title": "Dataset Overview",
+    "explanation": {
+      "what": "Dataset overview provides a high-level summary: number of samples, features, data types, and target distribution for the Bank Telemarketing dataset.",
+      "why": "Understanding dataset structure is the first step in EDA. It helps identify class imbalance (88.3% no vs 11.7% yes), feature types, and potential challenges like 'unknown' string values.",
+      "how": "Check for balanced/imbalanced targets, identify numerical vs categorical vs binary features, and understand dataset size. The 7.55:1 imbalance ratio requires special handling."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\ndf.info()\ndf.head(10)\n\n# Get numerical attributes list (no binary)\nnum_attrs= ['age', 'balance', 'duration', 'campaign', 'pdays', 'previous']\nbin_attrs= ['default', 'housing', 'loan', 'y']\nprint(num_attrs)\nprint(f'Number of numerical attributes: {len(num_attrs)}')\nprint(f'Feature Statistics:')\nfor attr in num_attrs:\n    print(f'{attr}:')\n    print(f'Mean: {df[attr].mean()}')\n    print(f'Median: {df[attr].median()}')\n    print(f'Std: {df[attr].std()}')"
+  },
+  "missing_values": {
+    "title": "Missing / Unknown Values Analysis",
+    "explanation": {
+      "what": "This dataset has NO NaN missing values, but contains 'unknown' string values in 4 columns: contact (13,020), poutcome (36,959), education (1,857), and job (288).",
+      "why": "'Unknown' values function like missing data. Understanding their prevalence helps decide: treat as a separate category, impute, or drop rows.",
+      "how": "Count 'unknown' occurrences per column. poutcome has 81.7% unknown (consider dropping or using as indicator). contact has 28.8% unknown."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\ndf.isna().sum()\ndf.duplicated().sum()\n\n# Check for 'unknown' string values\nfor col in df.select_dtypes(include='str').columns:\n    unknown_count = (df[col] == 'unknown').sum()\n    if unknown_count > 0:\n        print(f'{col}: {unknown_count} unknown ({unknown_count/len(df)*100:.2f}%)')"
+  },
+  "numerical_distributions": {
+    "title": "Numerical Feature Distributions",
+    "explanation": {
+      "what": "Distribution analysis shows how the 6 numerical features are spread. Includes histograms with KDE overlays and box plots with hue by target variable.",
+      "why": "Understanding distributions helps choose preprocessing. Heavy skewness in balance, duration, pdays suggests log transformation may help.",
+      "how": "Look for shape, outliers, and range. balance (mean 1362 vs median 448) is right-skewed. pdays has median -1 (never contacted)."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\nnum_attrs= ['age', 'balance', 'duration', 'campaign', 'pdays', 'previous']\n\n# Subplot division\nsp_col = 3\nsp_row = len(num_attrs) // sp_col + (len(num_attrs) % sp_col > 0)\nfig, axes = plt.subplots(nrows=sp_row, ncols=sp_col, figsize=(18, 14))\naxes = axes.flatten()\nfig.suptitle('Distribution of Numerical Features', fontsize=16, fontweight='bold')\nfor (idx, col) in enumerate(num_attrs):\n    ax = axes[idx]\n    sns.histplot(data=df, x= col, kde= True, ax=ax, hue= df['y'])\n    ax.set_title(col.replace('_', ' ').title(), fontsize=14, fontweight='bold')\n    ax.set_xlabel(col.replace('_', ' ').title())\n    ax.grid(axis='y', alpha=0.3)\nfor j in range(len(num_attrs), len(axes)):\n    axes[j].set_visible(False)\nplt.tight_layout()\nplt.show()\n\n#Box plots for outlier detection\nfig, axes = plt.subplots(nrows=sp_row, ncols=sp_col, figsize=(18, 14))\naxes = axes.flatten()\nfig.suptitle('Box Plots - Outlier Detection', fontsize=16, fontweight='bold')\n\nfor idx, col in enumerate(num_attrs):\n    ax = axes[idx]\n    sns.boxplot(y=df[col], ax=ax, hue= df['y'])\n    ax.set_title(col.replace('_', ' ').title(), fontsize=12, fontweight='bold')\n    ax.grid(axis='y', alpha=0.3)\nfor j in range(len(num_attrs), len(axes)):\n    axes[j].set_visible(False)\n\nplt.tight_layout()\nplt.show()"
+  },
+  "binary_distributions": {
+    "title": "Binary Feature Distributions",
+    "explanation": {
+      "what": "Binary features (default, housing, loan, y) have only two values: yes/no. Visualized with countplots grouped by target.",
+      "why": "Understanding binary feature distributions reveals imbalance within features. 'default' is extremely imbalanced (98.2% no).",
+      "how": "Count plot for each binary feature with hue=y. Check if any is too imbalanced to be useful as a predictor."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\nbin_attrs= ['default', 'housing', 'loan', 'y']\n\n#binary attribute\nfor attr in bin_attrs:\n    print(f'{attr}:')\n    print(df[attr].value_counts())\nsp_col = 3\nsp_row = len(bin_attrs) // sp_col + (len(bin_attrs) % sp_col > 0)\nfig, axes = plt.subplots(nrows=sp_row, ncols=sp_col, figsize=(18, 14))\naxes = axes.flatten()\nfig.suptitle('Distribution of Binary Features', fontsize=16, fontweight='bold')\nfor (idx, col) in enumerate(bin_attrs):\n    ax = axes[idx]\n    sns.countplot(data=df, x= col, ax=ax, hue= df['y'])\n    ax.set_title(col.replace('_', ' ').title(), fontsize=14, fontweight='bold')\n    ax.set_xlabel(col.replace('_', ' ').title())\n    ax.grid(axis='y', alpha=0.3)\nfor j in range(len(bin_attrs), len(axes)):\n    axes[j].set_visible(False)\nplt.tight_layout()\nplt.show()"
+  },
+  "categorical_distributions": {
+    "title": "Categorical Feature Distributions",
+    "explanation": {
+      "what": "Categorical features (job, marital, education, contact, month, poutcome) describe client demographics and campaign details.",
+      "why": "High cardinality features like job (12 categories) need appropriate encoding. poutcome with 81.7% unknown needs special attention.",
+      "how": "Check unique value counts. Low cardinality = One-Hot Encoding. High cardinality = Target or Frequency Encoding."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\n#Categorical attributes\ncat_attrs= ['job', 'marital', 'education', 'contact', 'month', 'poutcome']\n\n#get value counts for categorical attributes\nprint('Value Counts for Categorical Features:')\nval_counts = [df[attr].value_counts() for attr in cat_attrs]\nfor i, attr in enumerate(cat_attrs):\n    print(val_counts[i])\n#plot value counts for categorical attributes\nfig, axes = plt.subplots(nrows=len(cat_attrs), ncols=1, figsize=(16, 14))\naxes = axes.flatten()\nfig.suptitle('Categorical Feature Distributions', fontsize=16, fontweight='bold')\nfor i, attr in enumerate(cat_attrs):\n    ax = axes[i]\n    sns.barplot(x=val_counts[i].index, y=val_counts[i].values, ax=ax)\n    ax.set_title(attr.replace('_', ' ').title(), fontsize=14, fontweight='bold')\n    ax.set_xlabel(attr.replace('_', ' ').title())\n    ax.set_ylabel('Count')\n    ax.invert_yaxis()\n    ax.grid(axis='y', alpha=0.3)\n    total = val_counts[i].sum()\n    for x,y in enumerate(val_counts[i].values):\n         ax.text(x, y+0.05, f'{y:,} ({y/total*100:.1f}%)',va='center', fontsize=12, fontweight='bold')\nfor j in range(len(cat_attrs), len(axes)):\n    axes[j].set_visible(False)\n\nplt.tight_layout()\nplt.show()"
+  },
+  "target_distribution": {
+    "title": "Target Variable Analysis",
+    "explanation": {
+      "what": "The target 'y' indicates whether the client subscribed to a term deposit. The dataset is severely imbalanced: 88.3% no vs 11.7% yes.",
+      "why": "With a 7.55:1 imbalance ratio, standard accuracy is misleading. Need SMOTE, class weights, or threshold tuning.",
+      "how": "This dataset at 7.55:1 needs stratified sampling, appropriate metrics (F1, ROC-AUC, PR-AUC), and resampling techniques."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\n#Target value distribution\ntarget_counts = df['y'].value_counts()\nplt.figure(figsize=(6, 4))\nsns.countplot(data=df, x= 'y', hue= df['y'])\nplt.title('Target Variable Distribution', fontsize=16, fontweight='bold')\nplt.xlabel('Subscribed to Term Deposit')\nplt.ylabel('Count')\nplt.grid(axis='y', alpha=0.3)\ntotal = target_counts.sum()\nfor x,y in enumerate(target_counts.values):\n    plt.text(x, y+0.05, f'{y:,} ({y/total*100:.1f}%)', va='center', fontsize=12, fontweight='bold')\nplt.tight_layout()\nplt.show()\n#print imbalance ratio\nimbalance_ratio = target_counts.max() / target_counts.min()\nprint(f'Imbalance Ratio (No/Yes): {imbalance_ratio:.2f}')"
+  },
+  "correlation_analysis": {
+    "title": "Correlation Analysis",
+    "explanation": {
+      "what": "Correlation measures linear relationships between numerical features. Values range from -1 to +1.",
+      "why": "High correlations indicate redundancy. pdays and previous have r=0.45 (moderate positive correlation).",
+      "how": "Most correlations here are low (<0.1), indicating features are relatively independent — good for modeling."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\nnum_attrs= ['age', 'balance', 'duration', 'campaign', 'pdays', 'previous']\n\n#correlation heatmap for numerical and binary attributes\nplt.figure(figsize=(10, 8))\nsns.heatmap(df[num_attrs].corr(), annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)\nplt.title('Correlation Heatmap of Numerical Features', fontsize=16, fontweight='bold')\nplt.tight_layout()\nplt.show()"
+  },
+  "outlier_detection": {
+    "title": "Outlier Detection",
+    "explanation": {
+      "what": "Outliers are data points that significantly differ from others. pdays and previous have 18.26% outliers each.",
+      "why": "Outliers can skew statistics and bias models. pdays (median=-1) has structural outliers that are informative.",
+      "how": "<div class='outlier-methods'><div class='method-box'><strong>📐 IQR Method (Interquartile Range):</strong><div class='formula'>Lower Bound = Q1 - 1.5 × IQR</div><div class='formula'>Upper Bound = Q3 + 1.5 × IQR</div><div class='formula'>IQR = Q3 - Q1</div><p>Values <strong>outside [Lower, Upper]</strong> are outliers. Standard box plot method.</p></div><div class='method-box'><strong>📊 Z-Score Method:</strong><div class='formula'>z = (x - μ) / σ</div><p>If <strong>|z| > 3</strong>, value is outlier (>3 std from mean). Assumes normal distribution.</p></div><div class='method-box'><strong>⚠️ Important:</strong> Always <strong>investigate</strong> outliers before removing! pdays=-1 means never contacted — these are informative, not errors.</div></div>"
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\nnum_attrs= ['age', 'balance', 'duration', 'campaign', 'pdays', 'previous']\n\n#Outlier detection for numerical attributes\nsp_col = 3\nsp_row = len(num_attrs) // sp_col + (len(num_attrs) % sp_col > 0)\nfig, axes = plt.subplots(nrows=sp_row, ncols=sp_col, figsize=(18, 14))\naxes = axes.flatten()\nfig.suptitle('Outlier Detection Using Box Plots', fontsize=16)\nfor idx, col in enumerate(num_attrs):\n    ax = axes[idx]\n    sns.boxplot(data=df, x=col, ax=ax)\n    ax.set_title(col.replace('_', ' ').title(), fontsize=14, fontweight='bold')\n    ax.set_xlabel(col.replace('_', ' ').title())\n    ax.grid(axis='y', alpha=0.3)\n    Q1, Q3 = df[col].quantile([0.25, 0.75])\n    IQR = Q3 - Q1\n    outliers = len(df[(df[col] < Q1 - 1.5*IQR) | (df[col] > Q3 + 1.5*IQR)])\n    ax.text(0.5, 0.95, f'Outliers: {outliers}',transform=ax.transAxes, ha='center', fontsize=12, fontweight='bold')\nfor j in range(len(num_attrs), len(axes)):\n    axes[j].set_visible(False)\nplt.tight_layout()\nplt.show()\n#violin plot for numerical attributes\nfig, ax= plt.subplots(figsize=(10,7))\nsns.violinplot(data=df[num_attrs], palette='muted', ax=ax)\nax.set_title('Feature Distributions with Outliers (Violin Plot)', fontsize=14, fontweight='bold')\nax.set_ylabel('Value')\nplt.xticks(rotation=45)\nplt.tight_layout()\nplt.show()\n#table of outliers info\nfor idx, col in enumerate(num_attrs):\n    outlier_count = len(df[(df[col] < df[col].quantile(0.25) - 1.5*(df[col].quantile(0.75) - df[col].quantile(0.25))) | (df[col] > df[col].quantile(0.75) + 1.5*(df[col].quantile(0.75) - df[col].quantile(0.25)))])\n    print(f'{col}: {outlier_count}')\n    print(f'Outlier percentage: {outlier_count/len(df):.2%}')"
+  },
+  "target_vs_features": {
+    "title": "Target vs Categorical Features",
+    "explanation": {
+      "what": "Analyze how the target relates to each categorical feature. Shows which features strongly predict subscription.",
+      "why": "poutcome='success' has ~65% yes rate (strongest predictor). Students and retirees show higher subscription rates.",
+      "how": "Compare target distribution across categories using countplots with hue='y'. Large differences between groups = strong predictor."
+    },
+    "seaborn": "import pandas as pd\nimport kagglehub as KD\nfrom kagglehub import KaggleDatasetAdapter as KDA\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\nfile_path = \"Banking_Call_Data.xlsx\"\ndf = KD.dataset_load(KDA.PANDAS, \"younusmohamed/bank-telemarketing\", file_path)\n\ncat_attrs= ['job', 'marital', 'education', 'contact', 'month', 'poutcome']\n\n#target vs categorical attributes\nfig, axes = plt.subplots(nrows=len(cat_attrs), ncols=1, figsize=(17, 14))\naxes = axes.flatten()\nfig.suptitle('Target Variable vs Categorical Features', fontsize=16, fontweight='bold')\nfor i, attr in enumerate(cat_attrs):\n    ax = axes[i]\n    sns.countplot(data=df, x=attr, hue='y', ax=ax)\n    ax.set_title(attr.replace('_', ' ').title(), fontsize=14, fontweight='bold')\n    ax.set_xlabel(attr.replace('_', ' ').title())\n    ax.set_ylabel('Count')\n    ax.grid(axis='y', alpha=0.3)\n    total = df[attr].value_counts().sum()\n    for x,y in enumerate(df[attr].value_counts().values):\n        ax.text(x, y+0.05, f'{y:,} ({y/total*100:.1f}%)', va='center', fontsize=12, fontweight='bold')\nfor j in range(len(cat_attrs), len(axes)):\n    axes[j].set_visible(False)\nplt.tight_layout()\nplt.show()"
+  }
+}
