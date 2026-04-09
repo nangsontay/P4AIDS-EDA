@@ -1,0 +1,2379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDA Report — Tabular Data | Bank Marketing Dataset</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        /* ===== CSS RESET & BASE ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary: #1e3a5f;
+            --primary-light: #2c5282;
+            --accent: #2c7be5;
+            --accent-light: #4da3ff;
+            --accent-bg: #e8f2ff;
+            --bg: #f8f9fa;
+            --bg-white: #ffffff;
+            --text: #2d3748;
+            --text-light: #718096;
+            --text-muted: #a0aec0;
+            --border: #e2e8f0;
+            --success: #38a169;
+            --success-bg: #f0fff4;
+            --warning: #d69e2e;
+            --warning-bg: #fffff0;
+            --danger: #e53e3e;
+            --danger-bg: #fff5f5;
+            --info: #3182ce;
+            --info-bg: #ebf8ff;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+            --shadow-hover: 0 8px 25px rgba(0,0,0,0.14);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --nav-height: 64px;
+            --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-height) + 24px); }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.75;
+            font-size: 15px;
+        }
+
+        /* ===== SCROLL PROGRESS BAR ===== */
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light), #667eea);
+            z-index: 1100;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 8px rgba(44, 123, 229, 0.4);
+        }
+
+        /* ===== NAVIGATION ===== */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(30, 58, 95, 0.97);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            height: var(--nav-height);
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+        }
+        .navbar-brand {
+            color: #fff;
+            font-weight: 700;
+            font-size: 18px;
+            margin-right: 40px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .navbar-brand i { color: var(--accent-light); font-size: 20px; }
+        .nav-links {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .nav-links::-webkit-scrollbar { display: none; }
+        .nav-links a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 8px 14px;
+            border-radius: 6px;
+            white-space: nowrap;
+            transition: all var(--transition-base);
+            position: relative;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%) scaleX(0);
+            width: 20px;
+            height: 2px;
+            background: var(--accent-light);
+            border-radius: 1px;
+            transition: transform var(--transition-base);
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: #fff;
+            background: rgba(255,255,255,0.12);
+        }
+        .nav-links a.active::after {
+            transform: translateX(-50%) scaleX(1);
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, #2c5282 50%, var(--accent) 100%);
+            color: #fff;
+            padding: 80px 32px 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 70%, rgba(255,255,255,0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 30%, rgba(255,255,255,0.03) 0%, transparent 50%);
+        }
+        .hero-content { position: relative; max-width: 900px; margin: 0 auto; }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        .hero h1 {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            letter-spacing: -0.5px;
+        }
+        .hero p {
+            font-size: 18px;
+            opacity: 0.85;
+            max-width: 650px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+
+        /* ===== STATS GRID ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: var(--radius-sm);
+            padding: 20px 16px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: transform var(--transition-base), background var(--transition-base);
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.18);
+        }
+        .stat-card .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            display: block;
+            line-height: 1.1;
+            margin-bottom: 6px;
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            opacity: 0.75;
+            font-weight: 500;
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px 60px;
+        }
+
+        /* ===== CHAPTER HEADER ===== */
+        .chapter-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            padding-top: 20px;
+        }
+        .chapter-number {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 800;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(44, 123, 229, 0.3);
+        }
+        .chapter-header h2 {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1.3;
+        }
+        .chapter-header h2 small {
+            display: block;
+            font-size: 13px;
+            color: var(--text-light);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        /* ===== SECTION CARD ===== */
+        .card {
+            background: var(--bg-white);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+            transition: box-shadow var(--transition-base), transform var(--transition-base);
+            overflow: hidden;
+        }
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+        .card-header {
+            padding: 24px 32px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: background var(--transition-base);
+        }
+        .card-header:hover {
+            background: rgba(44, 123, 229, 0.03);
+        }
+        .card-header h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        .card-header h3 i {
+            color: var(--accent);
+            font-size: 18px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent-bg);
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+        .card-chevron {
+            color: var(--text-muted);
+            font-size: 14px;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-left: 16px;
+            flex-shrink: 0;
+        }
+        .card-chevron.collapsed {
+            transform: rotate(-90deg);
+        }
+        .card-body {
+            padding: 0 32px 32px;
+            overflow: hidden;
+            max-height: 20000px;
+            opacity: 1;
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.35s ease,
+                        padding 0.35s ease;
+        }
+        .card-body.collapsed {
+            max-height: 0 !important;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        .card h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-light);
+            margin: 24px 0 12px;
+        }
+        .card p, .card li {
+            color: var(--text);
+            line-height: 1.8;
+            margin-bottom: 12px;
+        }
+        .card ul, .card ol {
+            padding-left: 24px;
+            margin-bottom: 16px;
+        }
+        .card li { margin-bottom: 8px; }
+
+        /* ===== HIGHLIGHT BOXES ===== */
+        .insight-box {
+            border-left: 4px solid var(--accent);
+            background: var(--accent-bg);
+            padding: 16px 20px;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            margin: 18px 0;
+        }
+        .insight-box.success {
+            border-color: var(--success);
+            background: var(--success-bg);
+        }
+        .insight-box.warning {
+            border-color: var(--warning);
+            background: var(--warning-bg);
+        }
+        .insight-box.danger {
+            border-color: var(--danger);
+            background: var(--danger-bg);
+        }
+        .insight-box .insight-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .insight-box.success .insight-label { color: var(--success); }
+        .insight-box.warning .insight-label { color: var(--warning); }
+        .insight-box.danger .insight-label { color: var(--danger); }
+        .insight-box .insight-label i { font-size: 14px; }
+        .insight-box p { margin: 0; font-size: 14px; }
+
+        /* ===== KEY ACTION BOX ===== */
+        .action-box {
+            background: linear-gradient(135deg, #f6f9fc, #edf2f7);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px 24px;
+            margin: 18px 0;
+        }
+        .action-box .action-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .action-box .action-label i { font-size: 14px; }
+
+        /* ===== METRIC INLINE CARDS ===== */
+        .metric-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .metric-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 18px;
+            text-align: center;
+            transition: transform var(--transition-base), box-shadow var(--transition-base);
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .metric-card .metric-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1.1;
+        }
+        .metric-card .metric-value.accent { color: var(--accent); }
+        .metric-card .metric-value.danger { color: var(--danger); }
+        .metric-card .metric-value.success { color: var(--success); }
+        .metric-card .metric-label {
+            font-size: 12px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        /* ===== TABLES ===== */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        thead th {
+            background: var(--primary);
+            color: #fff;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        tbody td {
+            padding: 11px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        tbody tr:nth-child(even) { background: #f7fafc; }
+        tbody tr:nth-child(odd) { background: #fff; }
+        tbody tr {
+            transition: background var(--transition-base);
+        }
+        tbody tr:hover { background: var(--accent-bg); }
+        td code, p code, li code {
+            background: #edf2f7;
+            color: var(--danger);
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        /* ===== FIGURES ===== */
+        .figure-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin: 24px 0;
+        }
+        .figure-group.full-width-stack {
+            grid-template-columns: 1fr;
+        }
+        .figure {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            transition: box-shadow var(--transition-base), transform var(--transition-base);
+            cursor: pointer;
+        }
+        .figure:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-3px);
+        }
+        .figure img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.4s ease;
+        }
+        .figure:hover img {
+            transform: scale(1.01);
+        }
+        .figure figcaption {
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text-light);
+            text-align: center;
+            border-top: 1px solid var(--border);
+            background: #fafbfc;
+            font-weight: 500;
+        }
+        .figure-full {
+            margin: 24px 0;
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            cursor: pointer;
+            transition: box-shadow var(--transition-base), transform var(--transition-base);
+        }
+        .figure-full:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-3px);
+        }
+        .figure-full img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.4s ease;
+        }
+        .figure-full:hover img {
+            transform: scale(1.005);
+        }
+        .figure-full figcaption {
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text-light);
+            text-align: center;
+            border-top: 1px solid var(--border);
+            background: #fafbfc;
+            font-weight: 500;
+        }
+
+        /* ===== LIGHTBOX ===== */
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.88);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+        .lightbox-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .lightbox-overlay.fade-out {
+            opacity: 0;
+        }
+        .lightbox-content {
+            position: relative;
+            max-width: 92vw;
+            max-height: 90vh;
+            transform: scale(0.9);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .lightbox-overlay.active .lightbox-content {
+            transform: scale(1);
+        }
+        .lightbox-content img {
+            max-width: 100%;
+            max-height: 88vh;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            display: block;
+        }
+        .lightbox-caption {
+            color: rgba(255, 255, 255, 0.85);
+            text-align: center;
+            padding: 14px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .lightbox-close {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-base);
+            z-index: 2001;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: rotate(90deg);
+        }
+
+        /* ===== BACK TO TOP BUTTON ===== */
+        .back-to-top {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 48px;
+            height: 48px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(16px);
+            transition: all var(--transition-base);
+            z-index: 900;
+        }
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .back-to-top:hover {
+            background: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(44, 123, 229, 0.4);
+        }
+
+        /* ===== COLLAPSE / EXPAND CONTROLS ===== */
+        .controls-bar {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px 0 0;
+            flex-wrap: wrap;
+        }
+        .ctrl-btn {
+            padding: 8px 20px;
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            color: var(--text-light);
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all var(--transition-base);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: var(--shadow-sm);
+        }
+        .ctrl-btn:hover {
+            background: var(--accent-bg);
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        .ctrl-btn i { font-size: 12px; }
+
+        /* ===== DIVIDER ===== */
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--border), transparent);
+            margin: 48px 0;
+        }
+
+        /* ===== PIPELINE TABLE ===== */
+        .pipeline-step {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .pipeline-step:last-child { border-bottom: none; }
+        .pipeline-step-num {
+            background: var(--accent);
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .pipeline-step-content h4 { margin-top: 0; }
+
+        /* ===== BADGE ===== */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid #fed7d7; }
+        .badge-success { background: var(--success-bg); color: var(--success); border: 1px solid #c6f6d5; }
+        .badge-warning { background: var(--warning-bg); color: var(--warning); border: 1px solid #fefcbf; }
+        .badge-info { background: var(--info-bg); color: var(--info); border: 1px solid #bee3f8; }
+
+        /* ===== COMPARISON GRID ===== */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .compare-card {
+            border-radius: var(--radius-sm);
+            padding: 24px;
+            border: 2px solid;
+            transition: transform var(--transition-base), box-shadow var(--transition-base);
+        }
+        .compare-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .compare-card.model-a {
+            border-color: #e53e3e;
+            background: linear-gradient(135deg, #fff5f5, #fed7d7);
+        }
+        .compare-card.model-b {
+            border-color: #38a169;
+            background: linear-gradient(135deg, #f0fff4, #c6f6d5);
+        }
+        .compare-card h4 {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ===== FADE-IN ANIMATION ===== */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .fade-in-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: var(--primary);
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 40px 24px;
+            font-size: 13px;
+        }
+        .footer strong { color: #fff; }
+        .footer-divider {
+            width: 60px;
+            height: 2px;
+            background: var(--accent);
+            margin: 16px auto;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .navbar { padding: 0 16px; }
+            .navbar-brand { margin-right: 16px; font-size: 15px; }
+            .nav-links a { font-size: 12px; padding: 6px 10px; }
+            .hero { padding: 60px 20px 40px; }
+            .hero h1 { font-size: 28px; }
+            .hero p { font-size: 15px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-card .stat-value { font-size: 24px; }
+            .container { padding: 24px 16px; }
+            .card-header { padding: 18px 20px; }
+            .card-body { padding: 0 20px 20px; }
+            .chapter-header h2 { font-size: 20px; }
+            .compare-grid { grid-template-columns: 1fr; }
+            .figure-group { grid-template-columns: 1fr; }
+            .metric-row { grid-template-columns: 1fr 1fr; }
+            .lightbox-close { top: 12px; right: 12px; }
+            .back-to-top { bottom: 20px; right: 20px; width: 42px; height: 42px; }
+        }
+
+        /* ===== TUTORIAL PANEL & BUTTONS ===== */
+        .chapter-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        .tutorial-btn, .copy-code-btn {
+            padding: 7px 16px;
+            border-radius: 50px;
+            border: 1px solid var(--border);
+            background: var(--bg-white);
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            box-shadow: var(--shadow-sm);
+        }
+        .tutorial-btn:hover {
+            background: rgba(167, 139, 250, 0.1);
+            border-color: rgba(167, 139, 250, 0.4);
+            color: #7c3aed;
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        .copy-code-btn:hover {
+            background: var(--accent-bg);
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        .tutorial-btn.active {
+            background: rgba(167, 139, 250, 0.15);
+            border-color: rgba(167, 139, 250, 0.5);
+            color: #7c3aed;
+        }
+        .tutorial-panel {
+            background: rgba(167, 139, 250, 0.05);
+            border: 1px solid rgba(167, 139, 250, 0.15);
+            border-radius: var(--radius);
+            padding: 28px 32px;
+            margin-bottom: 24px;
+            animation: tutorialFadeIn 0.4s ease-out;
+        }
+        @keyframes tutorialFadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tutorial-panel h4 {
+            color: #7c3aed;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0 0 16px 0;
+        }
+        .tutorial-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .tutorial-meta-item {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+        }
+        .tutorial-meta-item .meta-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #7c3aed;
+            margin-bottom: 6px;
+        }
+        .tutorial-meta-item p {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text);
+            margin: 0;
+        }
+        .tutorial-code-wrapper {
+            position: relative;
+            margin-top: 16px;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+        .tutorial-code-wrapper .code-copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            z-index: 5;
+        }
+        .tutorial-code-wrapper .code-copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        .tutorial-code-wrapper pre[class*="language-"] {
+            margin: 0;
+            border-radius: var(--radius-sm);
+            max-height: 500px;
+            overflow: auto;
+        }
+        .tutorial-code-wrapper pre code {
+            font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace !important;
+            font-size: 13px !important;
+            line-height: 1.6 !important;
+            background: none !important;
+            color: inherit;
+            padding: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        /* ===== PRINT ===== */
+        @media print {
+            .navbar, .scroll-progress, .back-to-top, .controls-bar, .chapter-actions, .tutorial-panel { display: none; }
+            .hero { padding: 30px 20px; }
+            .card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+            .card-body.collapsed { max-height: none !important; opacity: 1; padding-bottom: 20px; }
+            .card-chevron { display: none; }
+            .fade-in-section { opacity: 1; transform: none; }
+        }
+
+        /* ===== RESPONSIVE TUTORIAL ===== */
+        @media (max-width: 768px) {
+            .chapter-actions { flex-wrap: wrap; margin-left: 0; margin-top: 12px; }
+            .chapter-header { flex-wrap: wrap; }
+            .tutorial-panel { padding: 18px 16px; }
+            .tutorial-meta { grid-template-columns: 1fr; }
+            .tutorial-code-wrapper pre[class*="language-"] { max-height: 350px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SCROLL PROGRESS BAR ===== -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- ===== NAVIGATION ===== -->
+<nav class="navbar">
+    <div class="navbar-brand">
+        <i class="fas fa-chart-bar"></i>
+        EDA Report
+    </div>
+    <div class="nav-links">
+        <a href="#chapter1">Ch.1 Data Integrity</a>
+        <a href="#chapter2">Ch.2 Numerical Analysis</a>
+        <a href="#chapter3">Ch.3 Categorical Analysis</a>
+        <a href="#chapter4">Ch.4 Data Leakage</a>
+        <a href="#chapter5">Ch.5 Pipeline & Baseline</a>
+    </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-badge">Exploratory Data Analysis</div>
+        <h1>Tabular Data — Bank Marketing Dataset</h1>
+        <p>Comprehensive analysis of 45,211 bank telemarketing records to uncover customer behavior patterns, detect data leakage, and build a robust preprocessing pipeline for ML modeling.</p>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value">45,211</span>
+                <span class="stat-label">Observations</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">17</span>
+                <span class="stat-label">Attributes</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">11.7%</span>
+                <span class="stat-label">"Yes" Conversion</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">0</span>
+                <span class="stat-label">Duplicate Rows</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">81.7%</span>
+                <span class="stat-label">Hidden Missing</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+
+    <!-- ===== COLLAPSE/EXPAND CONTROLS ===== -->
+    <div class="controls-bar">
+        <button class="ctrl-btn" id="collapseAllBtn"><i class="fas fa-compress-alt"></i> Collapse All</button>
+        <button class="ctrl-btn" id="expandAllBtn"><i class="fas fa-expand-alt"></i> Expand All</button>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- CHAPTER 1 -->
+    <!-- ============================================================ -->
+    <div id="chapter1">
+        <div class="chapter-header fade-in-section">
+            <div class="chapter-number">1</div>
+            <h2>
+                <small>Chapter 1</small>
+                Problem Definition, Integrity Checks &amp; the Data's "Hidden Traps"
+            </h2>
+            <div class="chapter-actions">
+                <button class="tutorial-btn" onclick="event.stopPropagation(); toggleTutorial('chapter_1')">📚 Tutorial</button>
+                <button class="copy-code-btn" onclick="event.stopPropagation(); copyChapterCode('chapter_1')">📋 Copy Code</button>
+            </div>
+        </div>
+        <div id="tutorial-panel-chapter_1" class="tutorial-panel" style="display: none;"></div>
+
+        <!-- 1.1 Dataset Overview -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-database"></i> 1.1 Dataset Overview &amp; Sanity Check</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <div class="metric-row">
+                    <div class="metric-card">
+                        <div class="metric-value accent">45,211</div>
+                        <div class="metric-label">Rows (Observations)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value accent">17</div>
+                        <div class="metric-label">Columns (Attributes)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value success">0</div>
+                        <div class="metric-label">Duplicate Rows</div>
+                    </div>
+                </div>
+                <p>The dataset consists of <strong>45,211 observations</strong> and <strong>17 attributes</strong> — a relatively large volume sufficient for training complex Machine Learning models. A quick duplicate scan shows <strong>0 duplicate rows</strong>, proving the bank's raw data collection process was robust, with each row representing a unique customer/contact instance. No resources need to be spent on deduplication.</p>
+            </div>
+        </div>
+
+        <!-- 1.2 Hidden Missing Values -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-eye-slash"></i> 1.2 Decoding "Hidden" Missing Values (The Iceberg Effect)</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <p>Typically, basic reports use <code>.isnull()</code> and conclude the data is "100% clean." However, a deep dive into the value distribution exposed a large volume of <strong>Missing Data disguised</strong> under the <code>unknown</code> label and the value <code>-1</code>.</p>
+
+                <h4>Categorical Variables:</h4>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Variable</th>
+                                <th>Description</th>
+                                <th>Unknown Rate</th>
+                                <th>Severity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>poutcome</code></td>
+                                <td>Previous campaign outcome</td>
+                                <td><strong>81.75%</strong></td>
+                                <td><span class="badge badge-danger">Critical</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>contact</code></td>
+                                <td>Contact method</td>
+                                <td><strong>28.80%</strong></td>
+                                <td><span class="badge badge-warning">High</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>education</code></td>
+                                <td>Education level</td>
+                                <td><strong>4.11%</strong></td>
+                                <td><span class="badge badge-info">Low</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>job</code></td>
+                                <td>Occupation</td>
+                                <td><strong>0.64%</strong></td>
+                                <td><span class="badge badge-info">Low</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4>Numerical Variable:</h4>
+                <p><code>pdays</code> (Days since last contact from previous campaign): As many as <strong>81.74%</strong> of customers have a value of <code>-1</code>, indicating they were never contacted.</p>
+
+                <div class="insight-box">
+                    <div class="insight-label"><i class="fas fa-lightbulb"></i> Insight</div>
+                    <p>The <code>poutcome</code> unknown rate and <code>pdays = -1</code> rate are nearly identical (~81.7%). This is logically sound: more than 81% of this dataset consists of <strong>entirely new customers</strong> who have never been contacted by the bank in previous campaigns.</p>
+                </div>
+
+                <div class="action-box">
+                    <div class="action-label"><i class="fas fa-cog"></i> Key Action</div>
+                    <p>Absolutely do <strong>not</strong> <code>drop</code> rows containing <code>unknown</code> — this would lose &gt;80% of data. We will keep <code>unknown</code> as an independent category, since "the bank has no data on this customer" is itself an important signal for prediction. For <code>pdays</code>, we will create an additional binary variable: <code>is_previously_contacted</code> (0 or 1).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1.3 Target Distribution -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-balance-scale-right"></i> 1.3 Target Distribution Shock (Severe Class Imbalance)</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <div class="metric-row">
+                    <div class="metric-card">
+                        <div class="metric-value danger">88.30%</div>
+                        <div class="metric-label">"No" — Declined (39,922)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value success">11.70%</div>
+                        <div class="metric-label">"Yes" — Agreed (5,289)</div>
+                    </div>
+                </div>
+
+                <p>Analysis of the target variable <code>y</code> (whether customers opened a savings account) reveals an enormous disparity. Only <strong>11.70% (5,289 people)</strong> agreed, while <strong>88.30% (39,922 people)</strong> declined. The Pie and Bar charts clearly illustrate the overwhelming dominance of the "no" group.</p>
+
+                <div class="insight-box warning">
+                    <div class="insight-label"><i class="fas fa-exclamation-triangle"></i> Technical Issue</div>
+                    <p>If we use Accuracy (overall correctness), a "blind" model that simply predicts all customers as "no" would achieve an Accuracy of 88.3%. This number is deceptively impressive but completely without practical value.</p>
+                </div>
+
+                <div class="action-box">
+                    <div class="action-label"><i class="fas fa-cog"></i> Committed Solution</div>
+                    <p>Models will <strong>not</strong> be evaluated using Accuracy. The mandatory replacement metrics are <strong>F1-Score, Precision, Recall</strong>, and the area under the <strong>ROC-AUC</strong> curve. Additionally, the training process must apply class weighting techniques (<code>class_weights</code>) or synthetic data generation (<code>SMOTE</code>) to force the model to learn to identify the minority class ("yes").</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1.4 Data Leakage -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-biohazard"></i> 1.4 Data Leakage Discovery — The <code>duration</code> Variable</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <p>This is a <strong>critical finding</strong> for ensuring the model can be deployed in practice (Deployable).</p>
+
+                <h4>Statistical Analysis &amp; Boxplot:</h4>
+                <div class="metric-row">
+                    <div class="metric-card">
+                        <div class="metric-value">221s</div>
+                        <div class="metric-label">"No" Group — Avg Duration</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value accent">537s</div>
+                        <div class="metric-label">"Yes" Group — Avg Duration</div>
+                    </div>
+                </div>
+
+                <p>The data reveals an extraordinary difference in call duration (<code>duration</code>) between the two customer groups. The Boxplot shows the "yes" group distribution is significantly higher, with clearly breakaway interquartile ranges.</p>
+
+                <div class="insight-box danger">
+                    <div class="insight-label"><i class="fas fa-skull-crossbones"></i> Future Leakage Risk</div>
+                    <p>
+                        1. If <code>duration = 0</code> (call not answered), it is certain that <code>y = no</code>.<br>
+                        2. Longer call duration proves customer interest, leading to higher closing rate.<br>
+                        3. <strong>HOWEVER</strong>, the <code>duration</code> variable is only collected <em>after</em> the call has ended. The bank's goal is to filter the customer list <em>before</em> the operator picks up the phone.
+                    </p>
+                </div>
+
+                <div class="action-box">
+                    <div class="action-label"><i class="fas fa-trash-alt"></i> Mandatory Action</div>
+                    <p>The <code>duration</code> variable is a dangerous form of <strong>Data Leakage</strong>. It can be used for behavioral analysis reports (e.g., "keep customers on the line for at least 500 seconds"), but it is <strong>mandatory to remove (drop) the <code>duration</code> column</strong> before feeding data into machine learning model training. If not, the model will be "deluded" by high performance in the test environment but fail completely in real-world deployment.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chapter 1 Figures -->
+        <div class="figure-group full-width-stack fade-in-section">
+            <figure class="figure" onclick="openLightbox(this)">
+                <img src="images/image 27.png" alt="Dataset overview and missing value analysis" loading="lazy">
+                <figcaption>Figure 1.1 — Dataset overview, missing value distribution &amp; target variable analysis</figcaption>
+            </figure>
+            <figure class="figure" onclick="openLightbox(this)">
+                <img src="images/image 28.png" alt="Duration boxplot and class imbalance" loading="lazy">
+                <figcaption>Figure 1.2 — Duration variable boxplot &amp; class imbalance visualization</figcaption>
+            </figure>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================ -->
+    <!-- CHAPTER 2 -->
+    <!-- ============================================================ -->
+    <div id="chapter2">
+        <div class="chapter-header fade-in-section">
+            <div class="chapter-number">2</div>
+            <h2>
+                <small>Chapter 2</small>
+                Numerical Variable Analysis, Outliers &amp; Customer "Fatigue"
+            </h2>
+            <div class="chapter-actions">
+                <button class="tutorial-btn" onclick="event.stopPropagation(); toggleTutorial('chapter_2')">📚 Tutorial</button>
+                <button class="copy-code-btn" onclick="event.stopPropagation(); copyChapterCode('chapter_2')">📋 Copy Code</button>
+            </div>
+        </div>
+        <div id="tutorial-panel-chapter_2" class="tutorial-panel" style="display: none;"></div>
+
+        <!-- 2.1 Age & Balance -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-chart-area"></i> 2.1 Age &amp; Balance Distribution: Solving the Outlier Problem</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <h4>Age Variable:</h4>
+                <p>Distributed in a <strong>right-skewed pattern</strong>, with the highest concentration among working-age customers between <strong>30–40 years old</strong>.</p>
+                <div class="insight-box success">
+                    <div class="insight-label"><i class="fas fa-gem"></i> Valuable Insight</div>
+                    <p>From the KDE curve, age 60+ shows the "Yes" group (blue) rising higher and denser than the "No" group (red). Combined with the Boxplot whisker extending further upward: <strong>Retired customers, though a small proportion, have an extremely impressive conversion rate.</strong> They have idle cash flow and a much higher need for safe, interest-bearing savings accounts.</p>
+                </div>
+
+                <h4>Balance Variable (Account Balance):</h4>
+                <ul>
+                    <li>Contains indebted customers (<strong>negative values</strong>) and extremely wealthy individuals with balances up to nearly <strong>100,000 EUR</strong> (visible as numerous black dots on the Boxplot).</li>
+                    <li>The distribution is extremely sharp and narrow near zero, causing the Boxplot to appear nearly squeezed flat.</li>
+                </ul>
+
+                <div class="action-box">
+                    <div class="action-label"><i class="fas fa-cog"></i> Key Action — Preprocessing</div>
+                    <p>Because <code>balance</code> contains countless Extreme Outliers and includes negative values, traditional scaling techniques such as <code>MinMaxScaler</code> or <code>StandardScaler</code> will fail miserably. We will use <strong>RobustScaler</strong> (based on IQR interquartile range) to scale numerical variables, or use the <strong>Yeo-Johnson</strong> transformation to handle skewness while preserving the negative values of indebted customers.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2.2 Customer Fatigue -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-phone-slash"></i> 2.2 Customer Fatigue &amp; ROI Optimization</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <p>The combined chart (Bar &amp; Line) between number of calls (<code>campaign</code>) and Conversion Rate reveals an extremely clear business picture:</p>
+
+                <h4>Conversion Funnel Decline:</h4>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Call Number</th>
+                                <th>Conversion Rate</th>
+                                <th>Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>1st call</strong></td>
+                                <td><strong>14.59%</strong></td>
+                                <td><span class="badge badge-success">Highest</span></td>
+                            </tr>
+                            <tr>
+                                <td>2nd call</td>
+                                <td>11.20%</td>
+                                <td><span class="badge badge-warning">Declining</span></td>
+                            </tr>
+                            <tr>
+                                <td>4th call</td>
+                                <td>9.00%</td>
+                                <td><span class="badge badge-warning">Declining</span></td>
+                            </tr>
+                            <tr>
+                                <td>5th+ call</td>
+                                <td>&lt; 8.00%</td>
+                                <td><span class="badge badge-danger">Low ROI</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p><strong>Statistical noise in the tail:</strong> The "jumps" at call number 11 or 17 on the red line chart are just Statistical Noise — the number of customers called that many times is too small to be statistically meaningful.</p>
+
+                <div class="insight-box warning">
+                    <div class="insight-label"><i class="fas fa-bullhorn"></i> Business Recommendation</div>
+                    <p>Apply a <strong>"4-call rule."</strong> Attempting to call a customer from the 5th time onwards within the same campaign only wastes Call Center time, causes inconvenience, "burns out" customers, and does not yield ROI.</p>
+                </div>
+
+                <div class="action-box">
+                    <div class="action-label"><i class="fas fa-cog"></i> Feature Engineering</div>
+                    <p>The <code>campaign</code> variable extends to 50–60 calls, creating a long-tail full of noise. We will apply <strong>Binning (Grouping)</strong>, converting this numerical column into categorical form: <em>'1 call', '2–3 calls', '4–5 calls', and 'More than 5 calls'</em> to help the model learn patterns more easily and prevent overfitting.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2.3 Multicollinearity -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-project-diagram"></i> 2.3 Multicollinearity Check via Correlation Matrix</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <p><strong>Observation from Heatmap:</strong> Most numerical variables (<code>age</code>, <code>balance</code>, <code>day</code>, <code>campaign</code>) are nearly completely independent of each other (correlation coefficients hovering around <strong>0.00</strong>).</p>
+
+                <div class="metric-row">
+                    <div class="metric-card">
+                        <div class="metric-value accent">0.45</div>
+                        <div class="metric-label">pdays ↔ previous correlation</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value success">~0.00</div>
+                        <div class="metric-label">Other variable pairs</div>
+                    </div>
+                </div>
+
+                <p><strong>Single noteworthy point:</strong> The pair <code>pdays</code> (days since last contact) and <code>previous</code> (calls in previous campaign) show a moderate positive correlation (<strong>0.45</strong>). This is logically sound: customers with more interaction history will also leave a temporal trace.</p>
+
+                <div class="action-box">
+                    <div class="action-label"><i class="fas fa-check-circle"></i> Key Action</div>
+                    <p>A correlation level of <strong>0.45</strong> is safe and has not reached the dangerous threshold (&gt; 0.7 or 0.8) that would cause Multicollinearity to disrupt linear model weights. <strong>We will retain all numerical variables without needing to drop any.</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chapter 2 Figures -->
+        <div class="figure-group full-width-stack fade-in-section">
+            <figure class="figure" onclick="openLightbox(this)">
+                <img src="images/image 29.png" alt="Age and Balance distribution with KDE and Boxplot" loading="lazy">
+                <figcaption>Figure 2.1 — Age &amp; Balance distribution (Histogram + KDE + Boxplot)</figcaption>
+            </figure>
+            <figure class="figure" onclick="openLightbox(this)">
+                <img src="images/image 30.png" alt="Campaign calls vs Conversion Rate" loading="lazy">
+                <figcaption>Figure 2.2 — Campaign calls vs. Conversion Rate &amp; Customer Fatigue</figcaption>
+            </figure>
+        </div>
+        <figure class="figure-full fade-in-section" onclick="openLightbox(this)">
+            <img src="images/image 31.png" alt="Correlation matrix heatmap" loading="lazy">
+            <figcaption>Figure 2.3 — Correlation Matrix Heatmap for Numerical Variables</figcaption>
+        </figure>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================ -->
+    <!-- CHAPTER 3 -->
+    <!-- ============================================================ -->
+    <div id="chapter3">
+        <div class="chapter-header fade-in-section">
+            <div class="chapter-number">3</div>
+            <h2>
+                <small>Chapter 3</small>
+                Categorical Variable Analysis &amp; Customer Profiling
+            </h2>
+            <div class="chapter-actions">
+                <button class="tutorial-btn" onclick="event.stopPropagation(); toggleTutorial('chapter_3')">📚 Tutorial</button>
+                <button class="copy-code-btn" onclick="event.stopPropagation(); copyChapterCode('chapter_3')">📋 Copy Code</button>
+            </div>
+        </div>
+        <div id="tutorial-panel-chapter_3" class="tutorial-panel" style="display: none;"></div>
+
+        <!-- 3.1 Chi-Square -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-square-root-alt"></i> 3.1 Mathematical Foundation: Chi-Square (χ²) Independence Test</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <p>Before proceeding to visual trend analysis, a core academic question must be answered: <em>"Is the difference in closing rate between groups of occupations, education levels, or call months real, or is it just random variation?"</em></p>
+
+                <ul>
+                    <li><strong>Null Hypothesis (H₀):</strong> There is no relationship between the categorical variable under consideration and the target variable <code>y</code>.</li>
+                    <li><strong>Results:</strong> All categorical variables return <strong>p-values ≈ 0.00</strong>, far below the standard significance level of α = 0.05.</li>
+                </ul>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Variable</th>
+                                <th>Chi-Square Statistic</th>
+                                <th>p-value</th>
+                                <th>Significance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>poutcome</code></td>
+                                <td><strong>4,391.51</strong></td>
+                                <td>≈ 0.00</td>
+                                <td><span class="badge badge-danger">Highest</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>month</code></td>
+                                <td><strong>3,061.84</strong></td>
+                                <td>≈ 0.00</td>
+                                <td><span class="badge badge-danger">Very High</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>contact</code></td>
+                                <td>—</td>
+                                <td>≈ 0.00</td>
+                                <td><span class="badge badge-warning">Significant</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>housing</code></td>
+                                <td>—</td>
+                                <td>≈ 0.00</td>
+                                <td><span class="badge badge-warning">Significant</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>job</code></td>
+                                <td>—</td>
+                                <td>≈ 0.00</td>
+                                <td><span class="badge badge-warning">Significant</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>education</code></td>
+                                <td>—</td>
+                                <td>≈ 0.00</td>
+                                <td><span class="badge badge-warning">Significant</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>loan</code></td>
+                                <td>—</td>
+                                <td>≈ 0.00</td>
+                                <td><span class="badge badge-warning">Significant</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>marital</code></td>
+                                <td>—</td>
+                                <td>≈ 0.00</td>
+                                <td><span class="badge badge-warning">Significant</span></td>
+                            </tr>
+                            <tr>
+                                <td><code>default</code></td>
+                                <td>—</td>
+                                <td>≈ 0.00</td>
+                                <td><span class="badge badge-warning">Significant</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="action-box">
+                    <div class="action-label"><i class="fas fa-check-double"></i> Key Action</div>
+                    <p>We have <strong>sufficient statistical evidence to completely reject the Null Hypothesis H₀</strong>. All existing categorical variables are Statistically Significant and contain predictive power. In particular, <code>poutcome</code> and <code>month</code> have the highest Chi-Square statistics, promising to carry the most accuracy weight for the ML model.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3.2 Demographic -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-users"></i> 3.2 Demographic &amp; Financial Burden Analysis (Debt Behavior)</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <p>Based on the series of 100% Stacked Bar Charts, the profile of potential customers emerges through contrasting characteristics:</p>
+
+                <h4>Occupation (Job) — The "Barbell Effect":</h4>
+                <div class="metric-row">
+                    <div class="metric-card">
+                        <div class="metric-value success">28.7%</div>
+                        <div class="metric-label">Students — Highest</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value success">22.8%</div>
+                        <div class="metric-label">Retirees — 2nd Highest</div>
+                    </div>
+                </div>
+                <p>The highest conversion rates are <strong>not</strong> found among white-collar/salaried workers (management, admin), but concentrate at the two extremes: <strong>Students (28.7%)</strong> and <strong>Retirees (22.8%)</strong>. Students may be opening accounts for subsidies/scholarships, while retirees need to safely preserve capital through term deposits.</p>
+
+                <h4>Education Level:</h4>
+                <p>There is a clear positive correlation. Higher education (<code>tertiary</code> — <strong>15.0%</strong>) correlates with better closing rates compared to primary education (<code>primary</code> — <strong>8.6%</strong>). Customers with strong educational backgrounds have higher awareness of personal financial management.</p>
+
+                <h4>The "Enemy" of Savings — Debt Burden:</h4>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Variable</th>
+                                <th>No Loan</th>
+                                <th>Has Loan</th>
+                                <th>Ratio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>housing</code> (Mortgage)</td>
+                                <td><strong>16.7%</strong> conversion</td>
+                                <td><strong>7.7%</strong> conversion</td>
+                                <td>2.2× higher without</td>
+                            </tr>
+                            <tr>
+                                <td><code>loan</code> (Personal loan)</td>
+                                <td><strong>12.7%</strong> conversion</td>
+                                <td><strong>6.7%</strong> conversion</td>
+                                <td>1.9× higher without</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="insight-box">
+                    <div class="insight-label"><i class="fas fa-lightbulb"></i> Business Insight</div>
+                    <p>If a customer has an installment loan to repay monthly, their cash flow is being constrained. It is very difficult to persuade them to additionally set aside savings deposits.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3.3 Poutcome -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-trophy"></i> 3.3 The Data Gold Mine: Interaction History (<code>poutcome</code>)</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <p>The variable <code>poutcome</code> (result of the previous marketing campaign) is the <strong>most important variable</strong> in the problem.</p>
+
+                <div class="metric-row">
+                    <div class="metric-card">
+                        <div class="metric-value success" style="font-size: 36px;">64.7%</div>
+                        <div class="metric-label">Conversion if previous = "success"</div>
+                    </div>
+                </div>
+
+                <div class="insight-box success">
+                    <div class="insight-label"><i class="fas fa-crown"></i> Key Insight</div>
+                    <p>If the customer agreed in the previous campaign (<code>success</code>), the rate at which they continue to open another savings account reaches an astonishing <strong>64.7%</strong>. Purchase history is the clearest evidence of loyalty and financial capability. The <code>poutcome=success</code> customer group must be placed in a <strong>VIP list</strong> for regular care, without overly "hard-sell" phone solicitations.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3.4 Seasonality -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-calendar-alt"></i> 3.4 The Seasonality Paradox: Volume vs. Quality</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <p>The Dual-Axis chart on seasonality (<code>month</code>) exposes a serious operational strategy mistake:</p>
+
+                <h4><i class="fas fa-times-circle" style="color: var(--danger);"></i> Resource Waste:</h4>
+                <p>The bank concentrates <strong>30.4%</strong> of all annual calls (~14,000 calls) into only <strong>May</strong>. Yet paradoxically, the closing rate for May bottoms out at <strong>6.7%</strong>. Similarly, summer months (June, July, August) have many calls but meager effectiveness (~10%).</p>
+
+                <h4><i class="fas fa-star" style="color: var(--warning);"></i> Missed Golden Windows:</h4>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Conversion Rate</th>
+                                <th>Call Volume Share</th>
+                                <th>Assessment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>March</strong></td>
+                                <td><strong>52.0%</strong></td>
+                                <td>~1.1%</td>
+                                <td><span class="badge badge-success">Golden Window</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>September</strong></td>
+                                <td><strong>46.5%</strong></td>
+                                <td>~1.3%</td>
+                                <td><span class="badge badge-success">Golden Window</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>October</strong></td>
+                                <td><strong>43.8%</strong></td>
+                                <td>~1.6%</td>
+                                <td><span class="badge badge-success">Golden Window</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>December</strong></td>
+                                <td><strong>46.7%</strong></td>
+                                <td>~0.4%</td>
+                                <td><span class="badge badge-success">Golden Window</span></td>
+                            </tr>
+                            <tr>
+                                <td>May</td>
+                                <td>6.7%</td>
+                                <td><strong>30.4%</strong></td>
+                                <td><span class="badge badge-danger">Overinvested</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="insight-box warning">
+                    <div class="insight-label"><i class="fas fa-exclamation-circle"></i> Business Insight — Report to Management</div>
+                    <p>Months 3, 9, and 12 may coincide with quarterly settlement periods, dividend distributions, or year-end bonuses, leaving customers with liquid cash. The bank must <strong>immediately reallocate its marketing budget</strong>: reduce Call Center staffing in May, and deploy the best agents at full intensity during March, September, October, and December to optimize the conversion funnel.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3.5 Preprocessing Strategy -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-cogs"></i> 3.5 Preprocessing Strategy (Feature Engineering / Encoding)</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <p>Based on comprehensive analysis, the data preparation strategy for ML models:</p>
+
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num">1</div>
+                    <div class="pipeline-step-content">
+                        <h4>Ordinal Encoding</h4>
+                        <p>Reserved exclusively for the <code>education</code> variable (primary → secondary → tertiary). Labels 0, 1, 2 are assigned to preserve the linear nature. The <code>unknown</code> group will be assigned the Mode value or interpolated prediction.</p>
+                    </div>
+                </div>
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num">2</div>
+                    <div class="pipeline-step-content">
+                        <h4>Binary Mapping</h4>
+                        <p>Yes/No variables such as <code>housing</code>, <code>loan</code>, <code>default</code> will be directly mapped to 1 and 0.</p>
+                    </div>
+                </div>
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num">3</div>
+                    <div class="pipeline-step-content">
+                        <h4>One-Hot Encoding (OHE)</h4>
+                        <p>Applied to Nominal variables with no hierarchical ordering such as <code>marital</code>, <code>contact</code>, <code>poutcome</code>.</p>
+                    </div>
+                </div>
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num">4</div>
+                    <div class="pipeline-step-content">
+                        <h4>Target Encoding / Binning</h4>
+                        <p>For the <code>job</code> variable (12 groups) and <code>month</code> (12 months), using OHE would cause column count explosion (Curse of Dimensionality). We will use Target Encoding or group <code>month</code> into Quarters (Q1–Q4) for cleaner model learning.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chapter 3 Figures — ALL FULL-WIDTH -->
+        <figure class="figure-full fade-in-section" onclick="openLightbox(this)">
+            <img src="images/image 32.png" alt="Chi-Square tests and demographic analysis" loading="lazy">
+            <figcaption>Figure 3.1 — Chi-Square test results &amp; Demographic analysis (Stacked Bar Charts)</figcaption>
+        </figure>
+        <figure class="figure-full fade-in-section" onclick="openLightbox(this)">
+            <img src="images/image 33.png" alt="Seasonality and poutcome analysis" loading="lazy">
+            <figcaption>Figure 3.2 — Seasonality paradox &amp; Interaction history (poutcome) analysis</figcaption>
+        </figure>
+        <figure class="figure-full fade-in-section" onclick="openLightbox(this)">
+            <img src="images/image 34.png" alt="Customer profiling and encoding strategy" loading="lazy">
+            <figcaption>Figure 3.3 — Complete categorical variable analysis &amp; Customer profiling</figcaption>
+        </figure>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================ -->
+    <!-- CHAPTER 4 -->
+    <!-- ============================================================ -->
+    <div id="chapter4">
+        <div class="chapter-header fade-in-section">
+            <div class="chapter-number">4</div>
+            <h2>
+                <small>Chapter 4</small>
+                The Core Blind Spot — Empirical Evidence of "Data Leakage"
+            </h2>
+            <div class="chapter-actions">
+                <button class="tutorial-btn" onclick="event.stopPropagation(); toggleTutorial('chapter_4')">📚 Tutorial</button>
+                <button class="copy-code-btn" onclick="event.stopPropagation(); copyChapterCode('chapter_4')">📋 Copy Code</button>
+            </div>
+        </div>
+        <div id="tutorial-panel-chapter_4" class="tutorial-panel" style="display: none;"></div>
+
+        <!-- 4.1 Logic -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-brain"></i> 4.1 The Logic of Data Leakage</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <p>From a business logic perspective, the bank builds an AI model to <strong>filter the customer list BEFORE the call center agent picks up the phone</strong>, to save telecommunications and staffing costs.</p>
+
+                <div class="insight-box danger">
+                    <div class="insight-label"><i class="fas fa-exclamation-triangle"></i> Critical Problem</div>
+                    <p>However, <code>duration</code> is information only generated <strong>AFTER</strong> the call has taken place and ended. If <code>duration = 0</code> (no answer), Target <code>y = no</code> is certain. Feeding <code>duration</code> into training is like <strong>giving students the answer key before the exam</strong>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4.2 Feature Importance -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-sort-amount-down"></i> 4.2 Evidence 1: Feature Importance Distortion</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <p>The comparative chart of the Top 10 Features of the 2 models reveals the "illusion" created by Data Leakage:</p>
+
+                <div class="compare-grid">
+                    <div class="compare-card model-a">
+                        <h4><i class="fas fa-times-circle" style="color: #e53e3e;"></i> Model A — The Deceiver</h4>
+                        <p><strong>Retaining <code>duration</code></strong></p>
+                        <p>The <code>duration</code> variable rises to claim sole dominance with an overwhelming Importance Score (&gt; 0.35). It acts like a "black hole," absorbing all importance from other variables. The model becomes "lazy," not learning deeper patterns about finance or demographics.</p>
+                    </div>
+                    <div class="compare-card model-b">
+                        <h4><i class="fas fa-check-circle" style="color: #38a169;"></i> Model B — The Realist</h4>
+                        <p><strong>Removing <code>duration</code></strong></p>
+                        <p>When the "answer key is taken away," the model learns true patterns. Variables such as <code>balance</code>, <code>age</code>, <code>day</code>, and <code>campaign</code> rise to the top. <strong>This is the true portrait of the customer.</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4.3 ROC-AUC -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-chart-line"></i> 4.3 Evidence 2: Performance Illusion &amp; ROC-AUC Curve</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <div class="compare-grid">
+                    <div class="compare-card model-a">
+                        <h4><i class="fas fa-mask" style="color: #e53e3e;"></i> Model A (Data Leakage)</h4>
+                        <div class="metric-row" style="margin: 12px 0 0;">
+                            <div class="metric-card">
+                                <div class="metric-value danger">0.929</div>
+                                <div class="metric-label">AUC — Inflated</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value danger">0.45</div>
+                                <div class="metric-label">F1-Score (Class 1)</div>
+                            </div>
+                        </div>
+                        <p style="margin-top: 12px; font-size: 14px;">The ROC curve curves perfectly — an inexperienced student would proudly claim this as an achievement.</p>
+                    </div>
+                    <div class="compare-card model-b">
+                        <h4><i class="fas fa-shield-alt" style="color: #38a169;"></i> Model B (No Leakage)</h4>
+                        <div class="metric-row" style="margin: 12px 0 0;">
+                            <div class="metric-card">
+                                <div class="metric-value success">0.785</div>
+                                <div class="metric-label">AUC — Honest</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value success">0.30</div>
+                                <div class="metric-label">F1-Score (Class 1)</div>
+                            </div>
+                        </div>
+                        <p style="margin-top: 12px; font-size: 14px;">When facing real-world data, the ROC curve reflects <strong>genuine model capability</strong>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4.4 Decision -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-gavel"></i> 4.4 Key Action — Data Scientist's Decision</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <div class="insight-box success">
+                    <div class="insight-label"><i class="fas fa-quote-left"></i> Professional Stance</div>
+                    <p><em>"The drop from AUC 0.929 to 0.785 is not a step backward in performance, but a step forward in honesty."</em> Model A is only a "dead model" that can never be deployed into a real system because, at inference time, the system has no <code>duration</code> data to input.</p>
+                </div>
+
+                <div class="action-box">
+                    <div class="action-label"><i class="fas fa-ban"></i> Conclusion</div>
+                    <p>It is mandatory to <strong>permanently remove the <code>duration</code> column</strong> from the dataset. The AUC ~ 0.785 of Model B will be the <strong>most honest Baseline</strong> for the project. Subsequent chapters (Feature Engineering, SMOTE, Hyperparameter Tuning) will push this AUC higher through genuine mathematical capability — not by relying on a data "trick."</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================ -->
+    <!-- CHAPTER 5 -->
+    <!-- ============================================================ -->
+    <div id="chapter5">
+        <div class="chapter-header fade-in-section">
+            <div class="chapter-number">5</div>
+            <h2>
+                <small>Chapter 5</small>
+                Preprocessing Pipeline &amp; Baseline Model Proposal
+            </h2>
+            <div class="chapter-actions">
+                <button class="tutorial-btn" onclick="event.stopPropagation(); toggleTutorial('chapter_5')">📚 Tutorial</button>
+                <button class="copy-code-btn" onclick="event.stopPropagation(); copyChapterCode('chapter_5')">📋 Copy Code</button>
+            </div>
+        </div>
+        <div id="tutorial-panel-chapter_5" class="tutorial-panel" style="display: none;"></div>
+
+        <!-- 5.1 Preprocessing -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-project-diagram"></i> 5.1 Preprocessing &amp; Feature Engineering Strategy</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <p>Based on the barriers identified from raw data, the preprocessing Pipeline must be designed with purpose — absolutely not applying Scaling or Encoding functions blindly.</p>
+
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num" style="background: var(--danger);"><i class="fas fa-trash" style="font-size: 14px;"></i></div>
+                    <div class="pipeline-step-content">
+                        <h4>Remove the "Data Leakage" Tumor <span class="badge badge-danger" style="margin-left: 8px;">Critical</span></h4>
+                        <p>Model run validation showed that <code>duration</code> distorts Feature Importance and creates a delusional AUC. The <code>duration</code> column will be <strong>dropped from the very first line of code</strong> to ensure valid inference capability in a real-world environment.</p>
+                    </div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num" style="background: var(--info);"><i class="fas fa-question" style="font-size: 14px;"></i></div>
+                    <div class="pipeline-step-content">
+                        <h4>Preserve Signals from "Missing Values" <span class="badge badge-info" style="margin-left: 8px;">From Insight 1.2</span></h4>
+                        <p>Instead of using <code>SimpleImputer</code> to fill with Mean/Mode — which erases the truth — we will <strong>keep <code>unknown</code> as an independent class</strong> and encode it with One-Hot. For <code>pdays</code> (containing 83% value of -1), we extract a binary flag: <code>is_previously_contacted</code> (0/1).</p>
+                    </div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num" style="background: var(--warning);"><i class="fas fa-compress-arrows-alt" style="font-size: 14px;"></i></div>
+                    <div class="pipeline-step-content">
+                        <h4>Control Extreme Outliers <span class="badge badge-warning" style="margin-left: 8px;">From Insight 2.1</span></h4>
+                        <p>The <code>balance</code> column contains ultra-wealthy customers and bad-debt customers (negative accounts). Using MinMaxScaler or StandardScaler would collapse the distribution space. Decision: Use <strong>RobustScaler</strong> (based on IQR) for numerical variables to neutralize outlier noise points.</p>
+                    </div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num" style="background: var(--success);"><i class="fas fa-layer-group" style="font-size: 14px;"></i></div>
+                    <div class="pipeline-step-content">
+                        <h4>Dimensionality Reduction &amp; Behavioral Clustering <span class="badge badge-success" style="margin-left: 8px;">From Insights 2.2 &amp; 3.4</span></h4>
+                        <p><strong>Campaign:</strong> Bin into groups: '1 call', '2–3 calls', '4–5 calls', and '>5 calls' to learn the "Customer Fatigue" pattern.</p>
+                        <p><strong>Seasonality (Month):</strong> Group 12 months into Quarters (Q1–Q4) or use Ordinal/Target Encoding to avoid the Curse of Dimensionality.</p>
+                        <p style="font-size: 13px; color: var(--text-light);"><em>Recommendation: Package the entire process into <code>sklearn.compose.ColumnTransformer</code> to ensure Train and Test sets are transformed separately, preventing Data Leakage at the Transform step.</em></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5.2 Modeling Strategy -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-robot"></i> 5.2 Modeling Strategy &amp; Performance Evaluation</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num" style="background: var(--danger);"><i class="fas fa-balance-scale" style="font-size: 14px;"></i></div>
+                    <div class="pipeline-step-content">
+                        <h4>Tackle Class Imbalance Definitively <span class="badge badge-danger" style="margin-left: 8px;">From Insight 1.3</span></h4>
+                        <p>The dataset is heavily skewed toward "No" (88.3%). <strong>Accuracy MUST NOT be used</strong> to measure results. We will integrate <code>class_weight='balanced'</code> into the algorithm, forcing heavy penalties when misclassifying the "Yes" class. The mandatory metric set: <strong>F1-Score (class 1)</strong> and <strong>ROC-AUC</strong>.</p>
+                    </div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num" style="background: var(--accent);"><i class="fas fa-chart-line" style="font-size: 14px;"></i></div>
+                    <div class="pipeline-step-content">
+                        <h4>Establish Baseline Model — Logistic Regression</h4>
+                        <p>Deploy first to establish a benchmark (<strong>Baseline AUC ~ 0.77</strong>). Logistic Regression provides linear coefficients (Coefficients), allowing direct explanation (Explainability) to Management of which factor most strongly influences the deposit decision.</p>
+                    </div>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="pipeline-step-num" style="background: var(--primary);"><i class="fas fa-rocket" style="font-size: 14px;"></i></div>
+                    <div class="pipeline-step-content">
+                        <h4>Main Weapon — Random Forest / XGBoost</h4>
+                        <p>Use Tree-based (Ensemble) models to push performance to the highest level. This group of algorithms can automatically handle <strong>non-linear relationships</strong> (such as the polarizing effect of <code>job</code>), while also recognizing cross-feature interactions between "Assets," "Education," and "Age" without requiring manually created Polynomial variables.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary table -->
+        <div class="card fade-in-section">
+            <div class="card-header" onclick="toggleCard(this)">
+                <h3><i class="fas fa-clipboard-list"></i> Complete Preprocessing Summary</h3>
+                <i class="fas fa-chevron-down card-chevron"></i>
+            </div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Step</th>
+                                <th>Action</th>
+                                <th>Variables</th>
+                                <th>Rationale</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td><strong>Drop</strong></td>
+                                <td><code>duration</code></td>
+                                <td>Data Leakage — not available at inference time</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td><strong>Binary flag</strong></td>
+                                <td><code>pdays</code> → <code>is_previously_contacted</code></td>
+                                <td>83% values are -1 (never contacted)</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td><strong>Keep <code>unknown</code></strong></td>
+                                <td><code>job</code>, <code>education</code>, <code>contact</code>, <code>poutcome</code></td>
+                                <td>"No data" is an important signal</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td><strong>RobustScaler</strong></td>
+                                <td><code>balance</code>, <code>age</code>, numerics</td>
+                                <td>Extreme outliers &amp; negative values</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td><strong>Binning</strong></td>
+                                <td><code>campaign</code> → 4 groups</td>
+                                <td>Customer fatigue after 4th call</td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td><strong>Ordinal Encoding</strong></td>
+                                <td><code>education</code></td>
+                                <td>Natural order: primary → secondary → tertiary</td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td><strong>Binary Mapping</strong></td>
+                                <td><code>housing</code>, <code>loan</code>, <code>default</code></td>
+                                <td>Yes/No → 1/0</td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td><strong>One-Hot Encoding</strong></td>
+                                <td><code>marital</code>, <code>contact</code>, <code>poutcome</code></td>
+                                <td>Nominal variables with no hierarchy</td>
+                            </tr>
+                            <tr>
+                                <td>9</td>
+                                <td><strong>Target/Quarter Encoding</strong></td>
+                                <td><code>job</code>, <code>month</code></td>
+                                <td>Avoid Curse of Dimensionality</td>
+                            </tr>
+                            <tr>
+                                <td>10</td>
+                                <td><strong>class_weight='balanced'</strong></td>
+                                <td>Model parameter</td>
+                                <td>88.3% vs 11.7% class imbalance</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+    <strong>EDA Report — Tabular Data (Bank Marketing Dataset)</strong>
+    <div class="footer-divider"></div>
+    <p>45,211 observations · 17 attributes · 5 chapters · 8 figures</p>
+    <p style="margin-top: 8px;">Generated for P4AIDS Course — HK252 | Exploratory Data Analysis Project</p>
+</footer>
+
+<!-- ===== LIGHTBOX OVERLAY ===== -->
+<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox(event)">
+    <button class="lightbox-close" onclick="closeLightbox(event)" aria-label="Close lightbox">
+        <i class="fas fa-times"></i>
+    </button>
+    <div class="lightbox-content" onclick="event.stopPropagation()">
+        <img id="lightboxImage" src="" alt="Enlarged figure">
+        <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
+</div>
+
+<!-- ===== BACK TO TOP BUTTON ===== -->
+<button class="back-to-top" id="backToTop" onclick="scrollToTop()" aria-label="Back to top">
+    <i class="fas fa-arrow-up"></i>
+</button>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+(function() {
+    'use strict';
+
+    // ===== LIGHTBOX =====
+    window.openLightbox = function(figureEl) {
+        var img = figureEl.querySelector('img');
+        var caption = figureEl.querySelector('figcaption');
+        if (!img) return;
+
+        var overlay = document.getElementById('lightboxOverlay');
+        var lbImg = document.getElementById('lightboxImage');
+        var lbCap = document.getElementById('lightboxCaption');
+
+        lbImg.src = img.src;
+        lbImg.alt = img.alt || '';
+        lbCap.textContent = caption ? caption.textContent : '';
+
+        overlay.style.display = 'flex';
+        // Force reflow for transition
+        void overlay.offsetWidth;
+        overlay.classList.add('active');
+        overlay.classList.remove('fade-out');
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeLightbox = function(e) {
+        if (e) e.stopPropagation();
+        var overlay = document.getElementById('lightboxOverlay');
+        overlay.classList.add('fade-out');
+        overlay.classList.remove('active');
+        setTimeout(function() {
+            overlay.style.display = 'none';
+            overlay.classList.remove('fade-out');
+            document.body.style.overflow = '';
+        }, 350);
+    };
+
+    // Close lightbox with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            var overlay = document.getElementById('lightboxOverlay');
+            if (overlay.classList.contains('active')) {
+                closeLightbox(e);
+            }
+        }
+    });
+
+    // ===== COLLAPSIBLE CARDS =====
+    window.toggleCard = function(headerEl) {
+        var card = headerEl.closest('.card');
+        if (!card) return;
+        var body = card.querySelector('.card-body');
+        var chevron = card.querySelector('.card-chevron');
+        if (!body) return;
+
+        var isCollapsed = body.classList.contains('collapsed');
+        if (isCollapsed) {
+            body.classList.remove('collapsed');
+            if (chevron) chevron.classList.remove('collapsed');
+        } else {
+            body.classList.add('collapsed');
+            if (chevron) chevron.classList.add('collapsed');
+        }
+    };
+
+    // ===== COLLAPSE ALL / EXPAND ALL =====
+    document.addEventListener('DOMContentLoaded', function() {
+        var collapseBtn = document.getElementById('collapseAllBtn');
+        var expandBtn = document.getElementById('expandAllBtn');
+
+        if (collapseBtn) {
+            collapseBtn.addEventListener('click', function() {
+                document.querySelectorAll('.card-body').forEach(function(body) {
+                    body.classList.add('collapsed');
+                });
+                document.querySelectorAll('.card-chevron').forEach(function(chev) {
+                    chev.classList.add('collapsed');
+                });
+            });
+        }
+
+        if (expandBtn) {
+            expandBtn.addEventListener('click', function() {
+                document.querySelectorAll('.card-body').forEach(function(body) {
+                    body.classList.remove('collapsed');
+                });
+                document.querySelectorAll('.card-chevron').forEach(function(chev) {
+                    chev.classList.remove('collapsed');
+                });
+            });
+        }
+    });
+
+    // ===== SCROLL PROGRESS BAR =====
+    function updateScrollProgress() {
+        var scrollTop = window.scrollY || document.documentElement.scrollTop;
+        var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        var progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        var bar = document.getElementById('scrollProgress');
+        if (bar) bar.style.width = progress + '%';
+    }
+
+    // ===== BACK TO TOP =====
+    window.scrollToTop = function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    function updateBackToTop() {
+        var btn = document.getElementById('backToTop');
+        if (!btn) return;
+        if (window.scrollY > 400) {
+            btn.classList.add('visible');
+        } else {
+            btn.classList.remove('visible');
+        }
+    }
+
+    // ===== SCROLL-SPY NAVIGATION =====
+    function updateNav() {
+        var sections = document.querySelectorAll('[id^="chapter"]');
+        var navLinks = document.querySelectorAll('.nav-links a');
+        var current = '';
+
+        sections.forEach(function(section) {
+            var rect = section.getBoundingClientRect();
+            if (rect.top <= 120) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(function(link) {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + current) {
+                link.classList.add('active');
+            }
+        });
+    }
+
+    // ===== INTERSECTION OBSERVER FOR FADE-IN =====
+    function setupFadeIn() {
+        var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.08,
+            rootMargin: '0px 0px -40px 0px'
+        });
+
+        document.querySelectorAll('.fade-in-section').forEach(function(el) {
+            observer.observe(el);
+        });
+    }
+
+    // ===== COMBINED SCROLL HANDLER =====
+    var scrollTicking = false;
+    window.addEventListener('scroll', function() {
+        if (!scrollTicking) {
+            requestAnimationFrame(function() {
+                updateScrollProgress();
+                updateBackToTop();
+                updateNav();
+                scrollTicking = false;
+            });
+            scrollTicking = true;
+        }
+    }, { passive: true });
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', function() {
+        setupFadeIn();
+        updateScrollProgress();
+        updateBackToTop();
+        updateNav();
+    });
+
+})();
+</script>
+
+<!-- ===== NOTEBOOK CODE EXAMPLES (Embedded JSON) ===== -->
+<script type="application/json" id="notebook-code-examples">
+{
+  "chapter_1": {
+    "title": "Chapter 1 — Sanity Check & Hidden Missing Values",
+    "what": "Loads the Bank Telemarketing dataset, checks for duplicates, detects hidden missing values ('unknown' strings and pdays=-1), examines class imbalance, and identifies data leakage in the duration feature.",
+    "why": "Data quality checks must precede any modeling. The 'Iceberg Effect' — where 81.7% of poutcome values are 'unknown' — would silently corrupt models if ignored. The duration feature leaks post-call information.",
+    "how": "Use df.duplicated(), value counting for 'unknown', and boxplot grouped by target to visualize leakage risk.",
+    "code": "# Install required libraries if you haven't already: !pip install datasets pandas matplotlib seaborn\n\nfrom datasets import load_dataset\nimport pandas as pd\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nimport numpy as np\n\n# Set the plot style for a professional look\nsns.set_theme(style=\"whitegrid\")\n\n# ==========================================\n# PHASE 0: LOAD DATASET\n# ==========================================\nprint(\"--- LOADING DATASET ---\")\nds = load_dataset(\"Andyrasika/banking-marketing\")\ndf = ds['train'].to_pandas()\nprint(f\"Dataset shape (Rows, Columns): {df.shape}\")\nprint(\"-\" * 50)\n\n# ==========================================\n# PHASE 1: SANITY CHECK & FINDING \"HIDDEN MISSING VALUES\"\n# ==========================================\nprint(\"\\n--- 1. BASIC SANITY CHECK ---\")\nduplicates = df.duplicated().sum()\nprint(f\"Number of duplicate rows: {duplicates}\")\n\nprint(\"\\n--- 2. PROPORTION OF HIDDEN MISSING VALUES ('unknown') ---\")\ncategorical_cols = df.select_dtypes(include=['object', 'category']).columns\nunknown_stats = []\nfor col in categorical_cols:\n    unknown_count = (df[col] == 'unknown').sum()\n    if unknown_count > 0:\n        unknown_pct = (unknown_count / len(df)) * 100\n        unknown_stats.append({'Column': col, 'Unknown Count': unknown_count, 'Percentage (%)': round(unknown_pct, 2)})\n\nunknown_df = pd.DataFrame(unknown_stats).sort_values(by='Percentage (%)', ascending=False)\nprint(unknown_df.to_string(index=False))\n\nprint(\"\\n--- 3. PROPORTION OF PREVIOUSLY UNCONTACTED CUSTOMERS (pdays = -1) ---\")\npdays_missing = (df['pdays'] == -1).sum()\npdays_missing_pct = (pdays_missing / len(df)) * 100\nprint(f\"Number of rows where pdays = -1: {pdays_missing} rows ({pdays_missing_pct:.2f}%)\")\n\n# ==========================================\n# PHASE 2: TARGET DISTRIBUTION (CLASS IMBALANCE)\n# ==========================================\nprint(\"\\n--- 4. CLASS IMBALANCE CHECK ---\")\ntarget_counts = df['y'].value_counts()\ntarget_pct = df['y'].value_counts(normalize=True) * 100\nprint(\"Target variable (y) distribution:\")\nfor idx, val in target_pct.items():\n    print(f\"Class '{idx}': {target_counts[idx]} rows ({val:.2f}%)\")\n\n# Plot Target Distribution\nplt.figure(figsize=(10, 5))\nplt.subplot(1, 2, 1)\nplt.pie(target_counts, labels=target_counts.index, autopct='%1.1f%%',\n        colors=['#ff9999','#66b3ff'], startangle=90, explode=(0.1, 0), shadow=True)\nplt.title('Percentage of Subscribed Customers (y)')\nplt.subplot(1, 2, 2)\nax = sns.countplot(data=df, x='y', palette=['#ff9999','#66b3ff'])\nfor p in ax.patches:\n    ax.annotate(f'{p.get_height()}', (p.get_x() + p.get_width() / 2., p.get_height()),\n                ha='center', va='center', xytext=(0, 5), textcoords='offset points')\nplt.title('Customer Count by Target (y)')\nplt.ylabel('Count')\nplt.tight_layout()\nplt.show()\n\n# ==========================================\n# PHASE 3: DATA LEAKAGE CHECK (DURATION)\n# ==========================================\nprint(\"\\n--- 5. DATA LEAKAGE WARNING: DURATION VS TARGET ---\")\nprint(\"Descriptive statistics of 'duration' grouped by 'y':\")\nprint(df.groupby('y')['duration'].describe())\n\nplt.figure(figsize=(8, 6))\nsns.boxplot(data=df, x='y', y='duration', palette='Set2')\nplt.title('Data Leakage Risk: Call Duration vs Target (y)')\nplt.ylabel('Call Duration (seconds)')\nplt.show()\n\nprint(\"\\n[KEY INSIGHTS FOR THE REPORT]:\")\nprint(\"1. If duration = 0, y is guaranteed to be 'no'.\")\nprint(\"2. Customers who converted (y = 'yes') have significantly longer average call duration.\")\nprint(\"3. Conclusion: We MUST drop 'duration' before training to prevent data leakage.\")"
+  },
+  "chapter_2": {
+    "title": "Chapter 2 — Numerical Distributions & Outliers",
+    "what": "Analyzes distributions of numerical features (age, balance) with KDE plots and boxplots, examines customer fatigue via campaign vs. conversion rate, and builds a correlation matrix.",
+    "why": "Balance has extreme outliers (mean 1,362 vs median 448) requiring RobustScaler. The 4-call rule identifies diminishing returns. pdays↔previous correlation (r=0.45) flags potential multicollinearity.",
+    "how": "Use sns.histplot with kde=True, dual-axis plots (twinx()), and sns.heatmap on the correlation matrix.",
+    "code": "import pandas as pd\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nimport numpy as np\nfrom datasets import load_dataset\nimport warnings\nwarnings.filterwarnings('ignore')\n\nsns.set_theme(style=\"whitegrid\")\n\n# PREPARATION: LOAD DATA & CLEAN\nprint(\"--- PREPARING DATA ---\")\nds = load_dataset(\"Andyrasika/banking-marketing\")\ndf = ds['train'].to_pandas()\ndf = df.drop(columns=['duration'])  # DROP DURATION (Data Leakage rule from Chapter 1)\ndf['y_numeric'] = df['y'].map({'yes': 1, 'no': 0})\nprint(\"Dataset prepared. 'duration' dropped. 'y_numeric' created.\\n\")\n\n# PHASE 3: NUMERICAL DISTRIBUTION & OUTLIERS\nprint(\"--- 1. DISTRIBUTION & OUTLIERS (AGE & BALANCE) ---\")\nfig, axes = plt.subplots(2, 2, figsize=(16, 12))\n\nsns.histplot(data=df, x='age', hue='y', kde=True, bins=30, ax=axes[0,0],\n             palette=['#ff9999','#66b3ff'], common_norm=False, stat='density')\naxes[0,0].set_title('Density Distribution of Age grouped by Target (y)')\n\nsns.boxplot(data=df, x='y', y='age', ax=axes[0,1], palette=['#ff9999','#66b3ff'])\naxes[0,1].set_title('Boxplot of Age (Checking Outliers)')\n\nmin_balance = df['balance'].min()\ndf['balance_shifted'] = df['balance'] - min_balance + 1\nsns.histplot(data=df, x='balance_shifted', hue='y', kde=True, bins=50, ax=axes[1,0],\n             palette=['#ff9999','#66b3ff'], log_scale=True, common_norm=False)\naxes[1,0].set_title('Log-Scaled Distribution of Balance (Shifted to handle negatives)')\naxes[1,0].set_xlabel('Balance (Log Scale)')\n\nsns.boxplot(data=df, x='y', y='balance', ax=axes[1,1], palette=['#ff9999','#66b3ff'])\naxes[1,1].set_title('Boxplot of Balance (Extreme Outliers Visible)')\n\nplt.tight_layout()\nplt.show()\ndf = df.drop(columns=['balance_shifted'])\n\n# PHASE 4: CUSTOMER FATIGUE (CAMPAIGN VS CONVERSION RATE)\nprint(\"\\n--- 2. CUSTOMER FATIGUE: CAMPAIGN VS CONVERSION RATE ---\")\ncampaign_cr = df.groupby('campaign')['y_numeric'].agg(['count', 'mean']).reset_index()\ncampaign_cr.rename(columns={'mean': 'conversion_rate', 'count': 'total_calls'}, inplace=True)\n\nfig, ax1 = plt.subplots(figsize=(12, 6))\nsns.barplot(data=campaign_cr[campaign_cr['campaign'] <= 20], x='campaign', y='total_calls',\n            color='lightgrey', ax=ax1, alpha=0.6)\nax1.set_ylabel('Total Number of Clients Contacted', color='grey')\nax1.set_xlabel('Number of Contacts Performed (Campaign)')\nax2 = ax1.twinx()\nsns.lineplot(data=campaign_cr[campaign_cr['campaign'] <= 20], x=campaign_cr['campaign']-1,\n             y='conversion_rate', color='red', marker='o', linewidth=2, ax=ax2)\nax2.set_ylabel('Conversion Rate (Proportion of \"Yes\")', color='red')\nax2.grid(False)\nplt.title('Customer Fatigue: Call Volume vs. Conversion Rate (Cap at 20 calls)')\nplt.show()\nprint(campaign_cr.head(10).to_string(index=False))\n\n# PHASE 5: MULTICOLLINEARITY (CORRELATION MATRIX)\nprint(\"\\n--- 3. NUMERICAL CORRELATION (MULTICOLLINEARITY CHECK) ---\")\nnum_cols = df.select_dtypes(include=np.number).columns.drop('y_numeric')\nplt.figure(figsize=(10, 8))\ncorr_matrix = df[num_cols].corr()\nsns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=\".2f\", linewidths=.5, vmin=-1, vmax=1)\nplt.title('Correlation Matrix of Numerical Features')\nplt.show()"
+  },
+  "chapter_3": {
+    "title": "Chapter 3 — Categorical Analysis & Chi-Square",
+    "what": "Profiles customer segments using 100% stacked bar charts, analyzes monthly seasonality, and validates feature significance using Chi-Square tests.",
+    "why": "Students (28.7%) and retirees (22.8%) show disproportionately high conversion. The Seasonality Paradox (May has high volume but low conversion) guides campaign timing. Chi-Square confirms all features are statistically significant (p < 0.05).",
+    "how": "Use pd.crosstab with normalize='index' for stacked bars, dual-axis plots for seasonality, and chi2_contingency from scipy.stats.",
+    "code": "import pandas as pd\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nimport numpy as np\nfrom datasets import load_dataset\nfrom scipy.stats import chi2_contingency\nimport warnings\nwarnings.filterwarnings('ignore')\n\nsns.set_theme(style=\"whitegrid\")\n\nprint(\"--- PREPARING DATA ---\")\nds = load_dataset(\"Andyrasika/banking-marketing\")\ndf = ds['train'].to_pandas()\ndf = df.drop(columns=['duration'])  # Rule from Ch1\ndf['y_numeric'] = df['y'].map({'yes': 1, 'no': 0})\nprint(\"Dataset prepared.\\n\")\n\n# PHASE 5: CATEGORICAL VARIABLES VS TARGET (100% STACKED BARS)\nprint(\"--- 1. DEMOGRAPHICS & DEBT: CONVERSION RATE PROFILING ---\")\ncat_features = ['job', 'education', 'housing', 'loan', 'marital', 'poutcome']\nfig, axes = plt.subplots(3, 2, figsize=(18, 16))\naxes = axes.flatten()\nfor i, col in enumerate(cat_features):\n    cross_tab = pd.crosstab(df[col], df['y'], normalize='index') * 100\n    cross_tab = cross_tab.sort_values(by='yes', ascending=True)\n    cross_tab.plot(kind='barh', stacked=True, color=['#ff9999', '#66b3ff'], ax=axes[i], width=0.8)\n    axes[i].set_title(f'Conversion Rate by {col.capitalize()}', fontsize=14)\n    axes[i].set_xlabel('Percentage (%)')\n    axes[i].set_ylabel('')\n    axes[i].legend(title='Target (y)', loc='upper right')\n    for n, x in enumerate(cross_tab['yes']):\n        axes[i].text(100 - x/2, n, f'{x:.1f}%', va='center', ha='center',\n                     color='black', fontsize=10, fontweight='bold')\nplt.tight_layout()\nplt.show()\n\n# PHASE 6: SEASONALITY (MONTHLY TRENDS)\nprint(\"\\n--- 2. CAMPAIGN SEASONALITY: VOLUME VS CONVERSION RATE ---\")\nmonth_order = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']\ndf['month'] = pd.Categorical(df['month'], categories=month_order, ordered=True)\nmonthly_stats = df.groupby('month')['y_numeric'].agg(['count', 'mean']).reset_index()\nmonthly_stats.rename(columns={'count': 'call_volume', 'mean': 'conversion_rate'}, inplace=True)\nmonthly_stats['volume_pct'] = (monthly_stats['call_volume'] / monthly_stats['call_volume'].sum()) * 100\n\nfig, ax1 = plt.subplots(figsize=(14, 7))\nsns.barplot(data=monthly_stats, x='month', y='call_volume', color='lightblue', ax=ax1, alpha=0.7)\nax1.set_ylabel('Total Call Volume', color='steelblue', fontsize=12)\nax1.set_xlabel('Month', fontsize=12)\nax2 = ax1.twinx()\nsns.lineplot(data=monthly_stats, x='month', y='conversion_rate', color='darkred',\n             marker='s', linewidth=2.5, markersize=8, ax=ax2)\nax2.set_ylabel('Conversion Rate (Proportion of \"Yes\")', color='darkred', fontsize=12)\nax2.grid(False)\nplt.title('Seasonality Analysis: Call Volume vs Conversion Rate by Month', fontsize=16)\nfor idx, row in monthly_stats.iterrows():\n    ax2.text(idx, row['conversion_rate'] + 0.01, f\"{row['conversion_rate']*100:.1f}%\",\n             color='darkred', ha='center', fontweight='bold')\nplt.show()\nprint(\"Monthly Statistics Detail:\")\nprint(monthly_stats.to_string(index=False))\n\n# PHASE 7: STATISTICAL RIGOR (CHI-SQUARE TESTS)\nprint(\"\\n--- 3. STATISTICAL SIGNIFICANCE (CHI-SQUARE TEST) ---\")\nprint(\"Null Hypothesis (H0): The categorical feature and Target (y) are independent.\")\nprint(\"If p-value < 0.05, we reject H0 -> Feature is statistically significant.\\n\")\ncat_cols = df.select_dtypes(include=['object', 'category']).columns.drop('y')\nchi_results = []\nfor col in cat_cols:\n    contingency_table = pd.crosstab(df[col], df['y'])\n    chi2, p, dof, expected = chi2_contingency(contingency_table)\n    is_significant = \"Yes\" if p < 0.05 else \"No\"\n    chi_results.append({\n        'Feature': col, 'Chi-Square Stat': round(chi2, 2),\n        'p-value': p, 'Significant (<0.05)?': is_significant\n    })\nchi_df = pd.DataFrame(chi_results).sort_values(by='Chi-Square Stat', ascending=False)\nprint(chi_df.to_string(index=False))"
+  },
+  "chapter_4": {
+    "title": "Chapter 4 — Data Leakage Empirical Evidence",
+    "what": "Empirically proves data leakage by training two Random Forest models — Model A with duration (AUC 0.929) vs. Model B without duration (AUC 0.785) — and comparing feature importance and ROC-AUC curves.",
+    "why": "Model A's inflated AUC is a statistical illusion since duration is only known after the call ends. Using it in a pre-call model would make it completely useless in production.",
+    "how": "Use sklearn.ensemble.RandomForestClassifier with class_weight='balanced', then compare roc_auc_score and feature_importances_ between the two models.",
+    "code": "import pandas as pd\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nfrom datasets import load_dataset\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.metrics import classification_report, roc_curve, auc\nimport warnings\nwarnings.filterwarnings('ignore')\n\nsns.set_theme(style=\"whitegrid\")\n\nprint(\"--- LOADING RAW DATA FOR LEAKAGE EXPERIMENT ---\")\nds = load_dataset(\"Andyrasika/banking-marketing\")\ndf = ds['train'].to_pandas()\n\ndf_ml = df.copy()\ndf_ml['y'] = df_ml['y'].map({'yes': 1, 'no': 0})\nX_raw = df_ml.drop(columns=['y'])\ny = df_ml['y']\nX_encoded = pd.get_dummies(X_raw, drop_first=True)\n\nX_with_leakage = X_encoded.copy()\nX_no_leakage = X_encoded.drop(columns=['duration'])\n\nX_train_leak, X_test_leak, y_train, y_test = train_test_split(\n    X_with_leakage, y, test_size=0.2, random_state=42, stratify=y)\nX_train_no_leak, X_test_no_leak, _, _ = train_test_split(\n    X_no_leakage, y, test_size=0.2, random_state=42, stratify=y)\nprint(\"Data ready. Training models...\\n\")\n\n# Model A: With Leakage (Naive)\nrf_leakage = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1, class_weight='balanced')\nrf_leakage.fit(X_train_leak, y_train)\n\n# Model B: No Leakage (Realistic)\nrf_no_leakage = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1, class_weight='balanced')\nrf_no_leakage.fit(X_train_no_leak, y_train)\n\nprint(\"--- 1. FEATURE IMPORTANCE COMPARISON ---\")\nfig, axes = plt.subplots(1, 2, figsize=(16, 6))\nimportances_leak = pd.Series(rf_leakage.feature_importances_, index=X_train_leak.columns).sort_values(ascending=False).head(10)\nsns.barplot(x=importances_leak.values, y=importances_leak.index, ax=axes[0], palette=\"Reds_r\")\naxes[0].set_title('Top 10 Features - Model A (WITH Leakage)')\naxes[0].set_xlabel('Importance Score')\nimportances_no_leak = pd.Series(rf_no_leakage.feature_importances_, index=X_train_no_leak.columns).sort_values(ascending=False).head(10)\nsns.barplot(x=importances_no_leak.values, y=importances_no_leak.index, ax=axes[1], palette=\"Blues_r\")\naxes[1].set_title('Top 10 Features - Model B (NO Leakage / Realistic)')\naxes[1].set_xlabel('Importance Score')\nplt.tight_layout()\nplt.show()\n\nprint(\"\\n--- 2. PERFORMANCE COMPARISON ---\")\ny_pred_leak = rf_leakage.predict(X_test_leak)\ny_pred_no_leak = rf_no_leakage.predict(X_test_no_leak)\nprint(\">>> MODEL A (WITH DURATION - THE ILLUSION):\")\nprint(classification_report(y_test, y_pred_leak))\nprint(\"\\n>>> MODEL B (NO DURATION - THE REALITY):\")\nprint(classification_report(y_test, y_pred_no_leak))\n\nprint(\"\\n--- 3. ROC-AUC CURVE COMPARISON ---\")\ny_prob_leak = rf_leakage.predict_proba(X_test_leak)[:, 1]\ny_prob_no_leak = rf_no_leakage.predict_proba(X_test_no_leak)[:, 1]\nfpr_leak, tpr_leak, _ = roc_curve(y_test, y_prob_leak)\nroc_auc_leak = auc(fpr_leak, tpr_leak)\nfpr_no_leak, tpr_no_leak, _ = roc_curve(y_test, y_prob_no_leak)\nroc_auc_no_leak = auc(fpr_no_leak, tpr_no_leak)\n\nplt.figure(figsize=(8, 6))\nplt.plot(fpr_leak, tpr_leak, color='red', lw=2, label=f'Model A: With Duration (AUC = {roc_auc_leak:.3f})')\nplt.plot(fpr_no_leak, tpr_no_leak, color='blue', lw=2, label=f'Model B: No Duration (AUC = {roc_auc_no_leak:.3f})')\nplt.plot([0, 1], [0, 1], color='gray', lw=1, linestyle='--')\nplt.xlim([0.0, 1.0])\nplt.ylim([0.0, 1.05])\nplt.xlabel('False Positive Rate')\nplt.ylabel('True Positive Rate')\nplt.title('ROC Curve Comparison: The Impact of Data Leakage')\nplt.legend(loc=\"lower right\")\nplt.show()"
+  },
+  "chapter_5": {
+    "title": "Chapter 5 — Preprocessing Pipeline & Baseline Model",
+    "what": "Builds a complete sklearn Pipeline with ColumnTransformer for preprocessing (RobustScaler for numerics, OrdinalEncoder for education, OneHotEncoder for nominals), then trains and evaluates Logistic Regression and Random Forest as baseline models.",
+    "why": "The Pipeline ensures no data leakage between train/test splits, handles the outlier problem via RobustScaler, and properly encodes education's ordinal relationship. class_weight='balanced' addresses the 7.55:1 class imbalance.",
+    "how": "Chain ColumnTransformer + classifier into Pipeline, split before preprocessing, use roc_auc_score as the primary metric.",
+    "code": "import pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nfrom datasets import load_dataset\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.preprocessing import RobustScaler, OneHotEncoder, OrdinalEncoder\nfrom sklearn.metrics import classification_report, roc_auc_score, roc_curve\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.ensemble import RandomForestClassifier\nimport warnings\nwarnings.filterwarnings('ignore')\nsns.set_theme(style=\"whitegrid\")\n\n# 1. LOAD DATA & FEATURE ENGINEERING\nprint(\"--- 1. DATA PREPARATION & FEATURE ENGINEERING ---\")\nds = load_dataset(\"Andyrasika/banking-marketing\")\ndf = ds['train'].to_pandas()\ndf = df.drop(columns=['duration'])  # Drop leakage feature immediately\ndf['y'] = df['y'].map({'yes': 1, 'no': 0})\ndf['is_previously_contacted'] = (df['pdays'] > -1).astype(int)\n\nX = df.drop(columns=['y'])\ny = df['y']\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)\nprint(f\"Training set: {X_train.shape[0]} rows | Test set: {X_test.shape[0]} rows\\n\")\n\n# 2. DESIGNING THE PREPROCESSING PIPELINE\nprint(\"--- 2. BUILDING THE COLUMN TRANSFORMER PIPELINE ---\")\nnumeric_features = ['balance', 'age', 'campaign', 'pdays', 'previous', 'day']\nordinal_features = ['education']\nnominal_features = ['job', 'marital', 'contact', 'poutcome', 'housing', 'loan', 'default', 'month', 'is_previously_contacted']\nedu_categories = [['unknown', 'primary', 'secondary', 'tertiary']]\n\npreprocessor = ColumnTransformer(transformers=[\n    ('num', RobustScaler(), numeric_features),\n    ('ord', OrdinalEncoder(categories=edu_categories), ordinal_features),\n    ('nom', OneHotEncoder(handle_unknown='ignore', drop='first'), nominal_features)\n])\n\n# 3. MODELING & EVALUATION\nprint(\"--- 3. TRAINING AND EVALUATING MODELS ---\")\npipeline_logreg = Pipeline(steps=[\n    ('preprocessor', preprocessor),\n    ('classifier', LogisticRegression(class_weight='balanced', max_iter=1000, random_state=42))\n])\npipeline_rf = Pipeline(steps=[\n    ('preprocessor', preprocessor),\n    ('classifier', RandomForestClassifier(class_weight='balanced', n_estimators=100, random_state=42, n_jobs=-1))\n])\nmodels = {\n    'Baseline: Logistic Regression': pipeline_logreg,\n    'Advanced: Random Forest': pipeline_rf\n}\nresults = {}\nfor name, model in models.items():\n    print(f\"\\n>> Training {name}...\")\n    model.fit(X_train, y_train)\n    y_pred = model.predict(X_test)\n    y_prob = model.predict_proba(X_test)[:, 1]\n    auc_score = roc_auc_score(y_test, y_prob)\n    results[name] = {'y_prob': y_prob, 'auc': auc_score}\n    print(f\"Classification Report for {name}:\")\n    print(classification_report(y_test, y_pred))\n\n# 4. FINAL ROC-AUC COMPARISON PLOT\nplt.figure(figsize=(9, 7))\nfor name, data in results.items():\n    fpr, tpr, _ = roc_curve(y_test, data['y_prob'])\n    plt.plot(fpr, tpr, lw=2, label=f\"{name} (AUC = {data['auc']:.3f})\")\nplt.plot([0, 1], [0, 1], color='gray', lw=1, linestyle='--')\nplt.xlim([0.0, 1.0])\nplt.ylim([0.0, 1.05])\nplt.xlabel('False Positive Rate', fontsize=12)\nplt.ylabel('True Positive Rate', fontsize=12)\nplt.title('Final Model Evaluation: ROC Curve Comparison', fontsize=14, fontweight='bold')\nplt.legend(loc=\"lower right\", fontsize=11)\nplt.show()\n\nprint(\"\\n[FINAL INSIGHT FOR REPORT]:\")\nprint(\"1. Using class_weight='balanced' successfully forced models to identify the 'Yes' class.\")\nprint(\"2. Random Forest outperforms Logistic Regression in separating classes (Higher AUC).\")\nprint(\"3. The Pipeline is completely robust against Data Leakage and Outliers, ready for production.\")"
+  }
+}
+</script>
+
+<!-- ===== PRISM.JS FOR SYNTAX HIGHLIGHTING ===== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+<!-- ===== TUTORIAL & COPY CODE JAVASCRIPT ===== -->
+<script>
+(function() {
+    'use strict';
+
+    var tutorialLoaded = {};
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    function getCodeData() {
+        var el = document.getElementById('notebook-code-examples');
+        if (!el) return null;
+        try {
+            return JSON.parse(el.textContent);
+        } catch (e) {
+            console.error('Failed to parse notebook code examples:', e);
+            return null;
+        }
+    }
+
+    window.toggleTutorial = function(chapterId) {
+        var panel = document.getElementById('tutorial-panel-' + chapterId);
+        if (!panel) return;
+
+        var btn = panel.previousElementSibling.querySelector('.tutorial-btn');
+
+        if (panel.style.display !== 'none' && panel.style.display !== '') {
+            panel.style.display = 'none';
+            if (btn) btn.classList.remove('active');
+            return;
+        }
+
+        // Load content on first open
+        if (!tutorialLoaded[chapterId]) {
+            var data = getCodeData();
+            if (!data || !data[chapterId]) {
+                panel.innerHTML = '<p style="color: var(--danger);">Tutorial data not found for ' + chapterId + '</p>';
+                panel.style.display = 'block';
+                return;
+            }
+
+            var chapter = data[chapterId];
+            var codeHtml = escapeHtml(chapter.code);
+
+            panel.innerHTML =
+                '<h4>📚 ' + escapeHtml(chapter.title) + '</h4>' +
+                '<div class="tutorial-meta">' +
+                    '<div class="tutorial-meta-item">' +
+                        '<div class="meta-label">🔍 What</div>' +
+                        '<p>' + escapeHtml(chapter.what) + '</p>' +
+                    '</div>' +
+                    '<div class="tutorial-meta-item">' +
+                        '<div class="meta-label">💡 Why</div>' +
+                        '<p>' + escapeHtml(chapter.why) + '</p>' +
+                    '</div>' +
+                    '<div class="tutorial-meta-item">' +
+                        '<div class="meta-label">⚙️ How</div>' +
+                        '<p>' + escapeHtml(chapter.how) + '</p>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="tutorial-code-wrapper">' +
+                    '<button class="code-copy-btn" onclick="copyChapterCode(\'' + chapterId + '\')">📋 Copy</button>' +
+                    '<pre class="language-python"><code class="language-python">' + codeHtml + '</code></pre>' +
+                '</div>';
+
+            // Apply Prism highlighting
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightAllUnder(panel);
+            }
+
+            tutorialLoaded[chapterId] = true;
+        }
+
+        panel.style.display = 'block';
+        if (btn) btn.classList.add('active');
+    };
+
+    window.copyChapterCode = function(chapterId) {
+        var data = getCodeData();
+        if (!data || !data[chapterId]) return;
+
+        var code = data[chapterId].code;
+        navigator.clipboard.writeText(code).then(function() {
+            // Find the copy button for this chapter and show feedback
+            var panel = document.getElementById('tutorial-panel-' + chapterId);
+            var copyBtn;
+            if (panel && panel.style.display !== 'none') {
+                copyBtn = panel.querySelector('.code-copy-btn');
+            }
+            // Also update the header copy button
+            var headerBtns = document.querySelectorAll('.copy-code-btn');
+            headerBtns.forEach(function(btn) {
+                if (btn.getAttribute('onclick').indexOf(chapterId) !== -1) {
+                    var origText = btn.textContent;
+                    btn.textContent = '✅ Copied!';
+                    btn.style.color = 'var(--success)';
+                    btn.style.borderColor = 'var(--success)';
+                    setTimeout(function() {
+                        btn.textContent = origText;
+                        btn.style.color = '';
+                        btn.style.borderColor = '';
+                    }, 2000);
+                }
+            });
+            if (copyBtn) {
+                var origCopy = copyBtn.textContent;
+                copyBtn.textContent = '✅ Copied!';
+                copyBtn.style.color = '#38a169';
+                setTimeout(function() {
+                    copyBtn.textContent = origCopy;
+                    copyBtn.style.color = '';
+                }, 2000);
+            }
+        }).catch(function(err) {
+            console.error('Copy failed:', err);
+            // Fallback
+            var textarea = document.createElement('textarea');
+            textarea.value = code;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+            } catch (e) {}
+            document.body.removeChild(textarea);
+        });
+    };
+})();
+</script>
+
+</body>
+</html>
